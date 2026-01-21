@@ -36,20 +36,26 @@ func main() {
 	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
 	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
 
+	secureOpts := []fiber.HandlerOption{fiber.WithTags("Secure Users")}
+
+	postOpts := append(append([]fiber.HandlerOption{}, secureOpts...), fiber.WithSecurity(&bearer))
+	postOpts = append(postOpts, fiber.JSONRoute(SecCreateUser{}, SecUser{}, http.StatusCreated)...)
 	fiber.POSTT[SecCreateUser, SecUser](r, "/secure/users", func(c *fiberlib.Ctx, in SecCreateUser) (SecUser, int, error) {
 		auth := c.Get("Authorization")
 		if !strings.HasPrefix(auth, "Bearer ") {
 			return SecUser{}, http.StatusUnauthorized, nil
 		}
 		return SecUser{ID: "1", Name: in.Name}, http.StatusCreated, nil
-	}, fiber.WithSecurity(&bearer))
+	}, postOpts...)
 
+	getOpts := append(append([]fiber.HandlerOption{}, secureOpts...), fiber.WithSecurity(&apiKey))
+	getOpts = append(getOpts, fiber.JSONRoute(struct{}{}, []SecUser{}, http.StatusOK)...)
 	fiber.GETT[struct{}, []SecUser](r, "/secure/users", func(c *fiberlib.Ctx, _ struct{}) ([]SecUser, int, error) {
 		if c.Get("X-API-Key") == "" {
 			return nil, http.StatusUnauthorized, nil
 		}
 		return []SecUser{{ID: "1", Name: "Alice"}}, http.StatusOK, nil
-	}, fiber.WithSecurity(&apiKey))
+	}, getOpts...)
 
 	fiber.Register(r, cfg)
 	_ = r.App.Listen(":8080")

@@ -41,34 +41,26 @@ func main() {
 	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
 	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
 
+	secureOpts := []gin.HandlerOption{gin.WithTags("Secure Users")}
+
+	postOpts := append(append([]gin.HandlerOption{}, secureOpts...), gin.WithSecurity(&bearer))
+	postOpts = append(postOpts, gin.JSONRoute(SecCreateUser{}, SecUser{}, http.StatusCreated)...)
 	gin.POSTT[SecCreateUser, SecUser](r, "/secure/users", func(c *ginlib.Context, in SecCreateUser) (SecUser, int, error) {
 		auth := c.GetHeader("Authorization")
 		if !strings.HasPrefix(auth, "Bearer ") {
 			return SecUser{}, http.StatusUnauthorized, nil
 		}
 		return SecUser{ID: "1", Name: in.Name}, http.StatusCreated, nil
-	},
-		gin.WithSecurity(&bearer),
-		gin.WithTags("Secure Users"),
-		gin.WithResponses(
-			openapi.ResponseSpec{Status: http.StatusCreated, Schema: SecUser{}, Description: "Created"},
-			openapi.ResponseSpec{Status: http.StatusUnauthorized, Schema: ErrorResponse{}, Description: "Unauthorized"},
-		),
-	)
+	}, postOpts...)
 
+	getOpts := append(append([]gin.HandlerOption{}, secureOpts...), gin.WithSecurity(&apiKey))
+	getOpts = append(getOpts, gin.JSONRoute(struct{}{}, []SecUser{}, http.StatusOK)...)
 	gin.GETT[struct{}, []SecUser](r, "/secure/users", func(c *ginlib.Context, _ struct{}) ([]SecUser, int, error) {
 		if c.GetHeader("X-API-Key") == "" {
 			return nil, http.StatusUnauthorized, nil
 		}
 		return []SecUser{{ID: "1", Name: "Alice"}}, http.StatusOK, nil
-	},
-		gin.WithSecurity(&apiKey),
-		gin.WithTags("Secure Users"),
-		gin.WithResponses(
-			openapi.ResponseSpec{Status: http.StatusOK, Schema: []SecUser{}, Description: "OK"},
-			openapi.ResponseSpec{Status: http.StatusUnauthorized, Schema: ErrorResponse{}, Description: "Unauthorized"},
-		),
-	)
+	}, getOpts...)
 
 	gin.Register(r, cfg)
 	_ = r.Engine.Run(":8080")

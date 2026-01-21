@@ -23,15 +23,17 @@ type CreateUserTyped struct {
 func main() {
 	r := gin.New()
 
-	// Full auto schema (request+response inferred)
+	typedOpts := []gin.HandlerOption{gin.WithTags("Typed")}
+
+	postOpts := append(append([]gin.HandlerOption{}, typedOpts...), gin.JSONRoute(CreateUserTyped{}, UserTyped{}, http.StatusCreated)...)
 	gin.POSTT[CreateUserTyped, UserTyped](r, "/typed/users", func(c *ginlib.Context, in CreateUserTyped) (UserTyped, int, error) {
 		return UserTyped{ID: "1", Name: in.Name}, http.StatusCreated, nil
-	})
+	}, postOpts...)
 
-	// No request body
+	getOpts := append(append([]gin.HandlerOption{}, typedOpts...), gin.JSONRoute(struct{}{}, []UserTyped{}, http.StatusOK)...)
 	gin.GETT[struct{}, []UserTyped](r, "/typed/users", func(c *ginlib.Context, _ struct{}) ([]UserTyped, int, error) {
 		return []UserTyped{{ID: "1", Name: "Alice"}}, http.StatusOK, nil
-	})
+	}, getOpts...)
 
 	gin.Register(r, openapi.Config{Title: "User API", Version: "1.0.0"})
 	_ = r.Engine.Run(":8080")

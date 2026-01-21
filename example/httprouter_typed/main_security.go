@@ -41,22 +41,26 @@ func main() {
 	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
 	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
 
-	// Bearer-protected endpoint
+	secureOpts := []httprouter.HandlerOption{httprouter.WithTags("Secure Users")}
+
+	postOpts := append(append([]httprouter.HandlerOption{}, secureOpts...), httprouter.WithSecurity(&bearer))
+	postOpts = append(postOpts, httprouter.JSONRoute(SecCreateUser{}, SecUser{}, http.StatusCreated)...)
 	httprouter.POSTT[SecCreateUser, SecUser](r, "/secure/users", func(w http.ResponseWriter, req *http.Request, in SecCreateUser) (SecUser, int, error) {
 		auth := req.Header.Get("Authorization")
 		if !strings.HasPrefix(auth, "Bearer ") {
 			return SecUser{}, http.StatusUnauthorized, nil
 		}
 		return SecUser{ID: "1", Name: in.Name}, http.StatusCreated, nil
-	}, httprouter.WithSecurity(&bearer))
+	}, postOpts...)
 
-	// API-key-protected endpoint
+	getOpts := append(append([]httprouter.HandlerOption{}, secureOpts...), httprouter.WithSecurity(&apiKey))
+	getOpts = append(getOpts, httprouter.JSONRoute(struct{}{}, []SecUser{}, http.StatusOK)...)
 	httprouter.GETT[struct{}, []SecUser](r, "/secure/users", func(w http.ResponseWriter, req *http.Request, _ struct{}) ([]SecUser, int, error) {
 		if req.Header.Get("X-API-Key") == "" {
 			return nil, http.StatusUnauthorized, nil
 		}
 		return []SecUser{{ID: "1", Name: "Alice"}}, http.StatusOK, nil
-	}, httprouter.WithSecurity(&apiKey))
+	}, getOpts...)
 
 	openapi.Register(r, cfg)
 	_ = http.ListenAndServe(":8080", r)

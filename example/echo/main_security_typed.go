@@ -36,20 +36,26 @@ func main() {
 	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
 	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
 
+	secureOpts := []echo.HandlerOption{echo.WithTags("Secure Users")}
+
+	postOpts := append(append([]echo.HandlerOption{}, secureOpts...), echo.WithSecurity(&bearer))
+	postOpts = append(postOpts, echo.JSONRoute(SecCreateUser{}, SecUser{}, http.StatusCreated)...)
 	echo.POSTT[SecCreateUser, SecUser](r, "/secure/users", func(c echolib.Context, in SecCreateUser) (SecUser, int, error) {
 		auth := c.Request().Header.Get("Authorization")
 		if !strings.HasPrefix(auth, "Bearer ") {
 			return SecUser{}, http.StatusUnauthorized, nil
 		}
 		return SecUser{ID: "1", Name: in.Name}, http.StatusCreated, nil
-	}, echo.WithSecurity(&bearer))
+	}, postOpts...)
 
+	getOpts := append(append([]echo.HandlerOption{}, secureOpts...), echo.WithSecurity(&apiKey))
+	getOpts = append(getOpts, echo.JSONRoute(struct{}{}, []SecUser{}, http.StatusOK)...)
 	echo.GETT[struct{}, []SecUser](r, "/secure/users", func(c echolib.Context, _ struct{}) ([]SecUser, int, error) {
 		if c.Request().Header.Get("X-API-Key") == "" {
 			return nil, http.StatusUnauthorized, nil
 		}
 		return []SecUser{{ID: "1", Name: "Alice"}}, http.StatusOK, nil
-	}, echo.WithSecurity(&apiKey))
+	}, getOpts...)
 
 	echo.Register(r, cfg)
 	_ = r.Echo.Start(":8080")
