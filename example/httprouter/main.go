@@ -23,6 +23,10 @@ type UpdateUser struct {
 	Name string `json:"name"`
 }
 
+type CreateUser struct {
+	Name string `json:"name"`
+}
+
 func main() {
 	r := openapi.NewRouter()
 
@@ -33,9 +37,24 @@ func main() {
 		openapi.ResponseSpec{Status: http.StatusInternalServerError, Schema: ErrorResponse{}, Description: "Internal Server Error"},
 	))
 
-	r.POST("/users", func(w http.ResponseWriter, _ *http.Request) {
+	r.GET("/search", func(w http.ResponseWriter, req *http.Request) {
+		_, _, _ = openapi.QueryValue[int](req, "limit")
+		w.WriteHeader(http.StatusOK)
+	}, openapi.WithTags("Users"), openapi.WithQueryParams(
+		openapi.QueryParam{Name: "q", Type: openapi.ParamString, Required: true, Description: "Search term"},
+		openapi.QueryParam{Name: "limit", Type: openapi.ParamInteger, Required: false, Description: "Max results"},
+	), openapi.WithResponses(
+		openapi.ResponseSpec{Status: http.StatusOK, Schema: struct{}{}, Description: "OK"},
+	))
+
+	r.POST("/users", func(w http.ResponseWriter, req *http.Request) {
+		var in CreateUser
+		if err := openapi.Bind(req, &in); err != nil {
+			openapi.JSON(w, http.StatusBadRequest, ErrorResponse{Error: "invalid body"})
+			return
+		}
 		w.WriteHeader(http.StatusCreated)
-	}, openapi.WithTags("Users"), openapi.WithResponses(
+	}, openapi.WithTags("Users"), openapi.WithRequestSchema(CreateUser{}), openapi.WithResponses(
 		openapi.ResponseSpec{Status: http.StatusCreated, Schema: struct{}{}, Description: "Created"},
 		openapi.ResponseSpec{Status: http.StatusBadRequest, Schema: ErrorResponse{}, Description: "Bad Request"},
 		openapi.ResponseSpec{Status: http.StatusInternalServerError, Schema: ErrorResponse{}, Description: "Internal Server Error"},
@@ -68,7 +87,7 @@ func main() {
 			return
 		}
 		openapi.JSON(w, http.StatusOK, User{ID: id, Name: in.Name})
-	}, openapi.WithTags("Users"), openapi.WithResponses(
+	}, openapi.WithTags("Users"), openapi.WithRequestSchema(UpdateUser{}), openapi.WithResponses(
 		openapi.ResponseSpec{Status: http.StatusOK, Schema: User{}, Description: "OK"},
 		openapi.ResponseSpec{Status: http.StatusBadRequest, Schema: ErrorResponse{}, Description: "Bad Request"},
 		openapi.ResponseSpec{Status: http.StatusNotFound, Schema: ErrorResponse{}, Description: "Not Found"},
@@ -88,7 +107,7 @@ func main() {
 			return
 		}
 		openapi.JSON(w, http.StatusOK, User{ID: id, Name: in.Name})
-	}, openapi.WithTags("Users"), openapi.WithResponses(
+	}, openapi.WithTags("Users"), openapi.WithRequestSchema(UpdateUser{}), openapi.WithResponses(
 		openapi.ResponseSpec{Status: http.StatusOK, Schema: User{}, Description: "OK"},
 		openapi.ResponseSpec{Status: http.StatusBadRequest, Schema: ErrorResponse{}, Description: "Bad Request"},
 		openapi.ResponseSpec{Status: http.StatusNotFound, Schema: ErrorResponse{}, Description: "Not Found"},

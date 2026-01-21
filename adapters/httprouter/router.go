@@ -23,6 +23,7 @@ var (
 	WithSecurity       = openapi.WithSecurity
 	WithTags           = openapi.WithTags
 	WithResponses      = openapi.WithResponses
+	WithQueryParams    = openapi.WithQueryParams
 )
 
 // Re-export helpers.

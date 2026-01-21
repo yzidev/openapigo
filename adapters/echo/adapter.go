@@ -29,6 +29,7 @@ var (
 	WithSecurity       = openapi.WithSecurity
 	WithTags           = openapi.WithTags
 	WithResponses      = openapi.WithResponses
+	WithQueryParams    = openapi.WithQueryParams
 )
 
 func (r *Router) Handle(method, path string, h echolib.HandlerFunc, opts ...HandlerOption) {
