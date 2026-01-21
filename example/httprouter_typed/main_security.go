@@ -43,8 +43,11 @@ func main() {
 
 	secureOpts := []httprouter.HandlerOption{httprouter.WithTags("Secure Users")}
 
-	postOpts := append(append([]httprouter.HandlerOption{}, secureOpts...), httprouter.WithSecurity(&bearer))
-	postOpts = append(postOpts, httprouter.JSONRoute(SecCreateUser{}, SecUser{}, http.StatusCreated)...)
+	postOpts := openapi.MergeOptionSlices(
+		secureOpts,
+		[]httprouter.HandlerOption{httprouter.WithSecurity(&bearer)},
+		httprouter.JSONRoute(SecCreateUser{}, SecUser{}, http.StatusCreated),
+	)
 	httprouter.POSTT[SecCreateUser, SecUser](r, "/secure/users", func(w http.ResponseWriter, req *http.Request, in SecCreateUser) (SecUser, int, error) {
 		auth := req.Header.Get("Authorization")
 		if !strings.HasPrefix(auth, "Bearer ") {
@@ -53,8 +56,11 @@ func main() {
 		return SecUser{ID: "1", Name: in.Name}, http.StatusCreated, nil
 	}, postOpts...)
 
-	getOpts := append(append([]httprouter.HandlerOption{}, secureOpts...), httprouter.WithSecurity(&apiKey))
-	getOpts = append(getOpts, httprouter.JSONRoute(struct{}{}, []SecUser{}, http.StatusOK)...)
+	getOpts := openapi.MergeOptionSlices(
+		secureOpts,
+		[]httprouter.HandlerOption{httprouter.WithSecurity(&apiKey)},
+		httprouter.JSONRoute(struct{}{}, []SecUser{}, http.StatusOK),
+	)
 	httprouter.GETT[struct{}, []SecUser](r, "/secure/users", func(w http.ResponseWriter, req *http.Request, _ struct{}) ([]SecUser, int, error) {
 		if req.Header.Get("X-API-Key") == "" {
 			return nil, http.StatusUnauthorized, nil

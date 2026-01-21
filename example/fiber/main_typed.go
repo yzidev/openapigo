@@ -25,12 +25,18 @@ func main() {
 
 	typedOpts := []fiber.HandlerOption{fiber.WithTags("Typed")}
 
-	postOpts := append(append([]fiber.HandlerOption{}, typedOpts...), fiber.JSONRoute(CreateUserTyped{}, UserTyped{}, http.StatusCreated)...)
+	postOpts := openapi.MergeOptionSlices(
+		typedOpts,
+		fiber.JSONRoute(CreateUserTyped{}, UserTyped{}, http.StatusCreated),
+	)
 	fiber.POSTT[CreateUserTyped, UserTyped](r, "/typed/users", func(c *fiberlib.Ctx, in CreateUserTyped) (UserTyped, int, error) {
 		return UserTyped{ID: "1", Name: in.Name}, http.StatusCreated, nil
 	}, postOpts...)
 
-	getOpts := append(append([]fiber.HandlerOption{}, typedOpts...), fiber.JSONRoute(struct{}{}, []UserTyped{}, http.StatusOK)...)
+	getOpts := openapi.MergeOptionSlices(
+		typedOpts,
+		fiber.JSONRoute(struct{}{}, []UserTyped{}, http.StatusOK),
+	)
 	fiber.GETT[struct{}, []UserTyped](r, "/typed/users", func(c *fiberlib.Ctx, _ struct{}) ([]UserTyped, int, error) {
 		return []UserTyped{{ID: "1", Name: "Alice"}}, http.StatusOK, nil
 	}, getOpts...)

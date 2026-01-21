@@ -25,12 +25,18 @@ func main() {
 
 	typedOpts := []echo.HandlerOption{echo.WithTags("Typed")}
 
-	postOpts := append(append([]echo.HandlerOption{}, typedOpts...), echo.JSONRoute(CreateUserTyped{}, UserTyped{}, http.StatusCreated)...)
+	postOpts := openapi.MergeOptionSlices(
+		typedOpts,
+		echo.JSONRoute(CreateUserTyped{}, UserTyped{}, http.StatusCreated),
+	)
 	echo.POSTT[CreateUserTyped, UserTyped](r, "/typed/users", func(c echolib.Context, in CreateUserTyped) (UserTyped, int, error) {
 		return UserTyped{ID: "1", Name: in.Name}, http.StatusCreated, nil
 	}, postOpts...)
 
-	getOpts := append(append([]echo.HandlerOption{}, typedOpts...), echo.JSONRoute(struct{}{}, []UserTyped{}, http.StatusOK)...)
+	getOpts := openapi.MergeOptionSlices(
+		typedOpts,
+		echo.JSONRoute(struct{}{}, []UserTyped{}, http.StatusOK),
+	)
 	echo.GETT[struct{}, []UserTyped](r, "/typed/users", func(c echolib.Context, _ struct{}) ([]UserTyped, int, error) {
 		return []UserTyped{{ID: "1", Name: "Alice"}}, http.StatusOK, nil
 	}, getOpts...)

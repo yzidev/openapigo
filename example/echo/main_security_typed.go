@@ -38,8 +38,11 @@ func main() {
 
 	secureOpts := []echo.HandlerOption{echo.WithTags("Secure Users")}
 
-	postOpts := append(append([]echo.HandlerOption{}, secureOpts...), echo.WithSecurity(&bearer))
-	postOpts = append(postOpts, echo.JSONRoute(SecCreateUser{}, SecUser{}, http.StatusCreated)...)
+	postOpts := openapi.MergeOptionSlices(
+		secureOpts,
+		[]echo.HandlerOption{echo.WithSecurity(&bearer)},
+		echo.JSONRoute(SecCreateUser{}, SecUser{}, http.StatusCreated),
+	)
 	echo.POSTT[SecCreateUser, SecUser](r, "/secure/users", func(c echolib.Context, in SecCreateUser) (SecUser, int, error) {
 		auth := c.Request().Header.Get("Authorization")
 		if !strings.HasPrefix(auth, "Bearer ") {
@@ -48,8 +51,11 @@ func main() {
 		return SecUser{ID: "1", Name: in.Name}, http.StatusCreated, nil
 	}, postOpts...)
 
-	getOpts := append(append([]echo.HandlerOption{}, secureOpts...), echo.WithSecurity(&apiKey))
-	getOpts = append(getOpts, echo.JSONRoute(struct{}{}, []SecUser{}, http.StatusOK)...)
+	getOpts := openapi.MergeOptionSlices(
+		secureOpts,
+		[]echo.HandlerOption{echo.WithSecurity(&apiKey)},
+		echo.JSONRoute(struct{}{}, []SecUser{}, http.StatusOK),
+	)
 	echo.GETT[struct{}, []SecUser](r, "/secure/users", func(c echolib.Context, _ struct{}) ([]SecUser, int, error) {
 		if c.Request().Header.Get("X-API-Key") == "" {
 			return nil, http.StatusUnauthorized, nil

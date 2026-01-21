@@ -38,8 +38,11 @@ func main() {
 
 	secureOpts := []fiber.HandlerOption{fiber.WithTags("Secure Users")}
 
-	postOpts := append(append([]fiber.HandlerOption{}, secureOpts...), fiber.WithSecurity(&bearer))
-	postOpts = append(postOpts, fiber.JSONRoute(SecCreateUser{}, SecUser{}, http.StatusCreated)...)
+	postOpts := openapi.MergeOptionSlices(
+		secureOpts,
+		[]fiber.HandlerOption{fiber.WithSecurity(&bearer)},
+		fiber.JSONRoute(SecCreateUser{}, SecUser{}, http.StatusCreated),
+	)
 	fiber.POSTT[SecCreateUser, SecUser](r, "/secure/users", func(c *fiberlib.Ctx, in SecCreateUser) (SecUser, int, error) {
 		auth := c.Get("Authorization")
 		if !strings.HasPrefix(auth, "Bearer ") {
@@ -48,8 +51,11 @@ func main() {
 		return SecUser{ID: "1", Name: in.Name}, http.StatusCreated, nil
 	}, postOpts...)
 
-	getOpts := append(append([]fiber.HandlerOption{}, secureOpts...), fiber.WithSecurity(&apiKey))
-	getOpts = append(getOpts, fiber.JSONRoute(struct{}{}, []SecUser{}, http.StatusOK)...)
+	getOpts := openapi.MergeOptionSlices(
+		secureOpts,
+		[]fiber.HandlerOption{fiber.WithSecurity(&apiKey)},
+		fiber.JSONRoute(struct{}{}, []SecUser{}, http.StatusOK),
+	)
 	fiber.GETT[struct{}, []SecUser](r, "/secure/users", func(c *fiberlib.Ctx, _ struct{}) ([]SecUser, int, error) {
 		if c.Get("X-API-Key") == "" {
 			return nil, http.StatusUnauthorized, nil
