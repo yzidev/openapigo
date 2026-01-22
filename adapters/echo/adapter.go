@@ -4,7 +4,6 @@ package echo
 
 import (
 	"net/http"
-	"reflect"
 	"strings"
 
 	echolib "github.com/labstack/echo/v4"
@@ -75,16 +74,24 @@ func Register(r *Router, cfg openapi.Config) {
 	if specPath == "" {
 		specPath = "/openapi.json"
 	}
-	swagPath := cfg.SwaggerPath
-	if swagPath == "" {
-		swagPath = "/swagger"
+	mount := cfg.SwaggerPath
+	if mount == "" {
+		mount = "/swagger-ui"
 	}
+	mount = strings.TrimSuffix(mount, "/")
+	indexPath := mount + "/index.html"
 
 	r.Echo.GET(specPath, func(c echolib.Context) error {
 		return c.JSON(200, doc)
 	})
 
-	r.Echo.GET(swagPath, func(c echolib.Context) error {
+	redirect := func(c echolib.Context) error {
+		return c.Redirect(http.StatusFound, indexPath+"#/")
+	}
+
+	r.Echo.GET(mount, redirect)
+	r.Echo.GET(mount+"/", redirect)
+	r.Echo.GET(indexPath, func(c echolib.Context) error {
 		return c.HTML(200, `<!DOCTYPE html>
 <html>
 <head>
@@ -103,6 +110,10 @@ SwaggerUIBundle({
 </body>
 </html>`)
 	})
+
+	// Legacy /swagger redirect
+	r.Echo.GET("/swagger", redirect)
+	r.Echo.GET("/swagger/", redirect)
 }
 
 func Bind(c echolib.Context, v interface{}) error           { return c.Bind(v) }
@@ -110,161 +121,7 @@ func JSON(c echolib.Context, code int, v interface{}) error { return c.JSON(code
 
 type SecurityRequirement = openapi3.SecurityRequirement
 
-// Typed handler support (full-auto schema)
-type TypedHandler[TReq any, TRes any] func(c echolib.Context, req TReq) (res TRes, status int, err error)
-
-func isZeroStructType[T any]() bool {
-	var zero T
-	t := reflect.TypeOf(zero)
-	return t != nil && t.Kind() == reflect.Struct && t.NumField() == 0
-}
-
-func typedOptions[TReq any, TRes any]() (reqOpt, resOpt HandlerOption) {
-	var reqZero TReq
-	var resZero TRes
-	if !isZeroStructType[TReq]() {
-		reqOpt = WithRequestSchema(reqZero)
-	}
-	if !isZeroStructType[TRes]() {
-		resOpt = WithResponseSchema(resZero)
-	}
-	return reqOpt, resOpt
-}
-
-func mergeOpts(base []HandlerOption, add ...HandlerOption) []HandlerOption {
-	out := make([]HandlerOption, 0, len(base)+len(add))
-	out = append(out, base...)
-	out = append(out, add...)
-	return out
-}
-
-func wrapTyped[TReq any, TRes any](h TypedHandler[TReq, TRes]) echolib.HandlerFunc {
-	return func(c echolib.Context) error {
-		var reqVal TReq
-		if !isZeroStructType[TReq]() {
-			_ = Bind(c, &reqVal)
-		}
-
-		res, code, err := h(c, reqVal)
-		if err != nil {
-			return JSON(c, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		}
-		if code == 0 {
-			code = http.StatusOK
-		}
-		if isZeroStructType[TRes]() {
-			return c.NoContent(code)
-		}
-		return JSON(c, code, res)
-	}
-}
-
-func GETT[TReq any, TRes any](r *Router, path string, h TypedHandler[TReq, TRes], opts ...HandlerOption) {
-	reqOpt, resOpt := typedOptions[TReq, TRes]()
-	base := make([]HandlerOption, 0, 2)
-	if reqOpt != nil {
-		base = append(base, reqOpt)
-	}
-	if resOpt != nil {
-		base = append(base, resOpt)
-	}
-	r.Handle(http.MethodGet, path, wrapTyped(h), mergeOpts(base, opts...)...)
-}
-
-func POSTT[TReq any, TRes any](r *Router, path string, h TypedHandler[TReq, TRes], opts ...HandlerOption) {
-	reqOpt, resOpt := typedOptions[TReq, TRes]()
-	base := make([]HandlerOption, 0, 2)
-	if reqOpt != nil {
-		base = append(base, reqOpt)
-	}
-	if resOpt != nil {
-		base = append(base, resOpt)
-	}
-	r.Handle(http.MethodPost, path, wrapTyped(h), mergeOpts(base, opts...)...)
-}
-
-func PUTT[TReq any, TRes any](r *Router, path string, h TypedHandler[TReq, TRes], opts ...HandlerOption) {
-	reqOpt, resOpt := typedOptions[TReq, TRes]()
-	base := make([]HandlerOption, 0, 2)
-	if reqOpt != nil {
-		base = append(base, reqOpt)
-	}
-	if resOpt != nil {
-		base = append(base, resOpt)
-	}
-	r.Handle(http.MethodPut, path, wrapTyped(h), mergeOpts(base, opts...)...)
-}
-
-func PATCHT[TReq any, TRes any](r *Router, path string, h TypedHandler[TReq, TRes], opts ...HandlerOption) {
-	reqOpt, resOpt := typedOptions[TReq, TRes]()
-	base := make([]HandlerOption, 0, 2)
-	if reqOpt != nil {
-		base = append(base, reqOpt)
-	}
-	if resOpt != nil {
-		base = append(base, resOpt)
-	}
-	r.Handle(http.MethodPatch, path, wrapTyped(h), mergeOpts(base, opts...)...)
-}
-
-func DELETET[TReq any, TRes any](r *Router, path string, h TypedHandler[TReq, TRes], opts ...HandlerOption) {
-	reqOpt, resOpt := typedOptions[TReq, TRes]()
-	base := make([]HandlerOption, 0, 2)
-	if reqOpt != nil {
-		base = append(base, reqOpt)
-	}
-	if resOpt != nil {
-		base = append(base, resOpt)
-	}
-	r.Handle(http.MethodDelete, path, wrapTyped(h), mergeOpts(base, opts...)...)
-}
-
-// JSON wrappers
-func (r *Router) GETJSON(path string, h echolib.HandlerFunc, resSchema any, opts ...HandlerOption) {
-	all := openapi.MergeOptionSlices(openapi.JSONRoute(nil, resSchema, http.StatusOK), opts)
-	r.GET(path, h, all...)
-}
-
-func (r *Router) POSTJSON(path string, h echolib.HandlerFunc, reqSchema any, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := openapi.MergeOptionSlices(openapi.JSONRoute(reqSchema, resSchema, successStatus), opts)
-	r.POST(path, h, all...)
-}
-
-func (r *Router) PUTJSON(path string, h echolib.HandlerFunc, reqSchema any, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := openapi.MergeOptionSlices(openapi.JSONRoute(reqSchema, resSchema, successStatus), opts)
-	r.PUT(path, h, all...)
-}
-
-func (r *Router) PATCHJSON(path string, h echolib.HandlerFunc, reqSchema any, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := openapi.MergeOptionSlices(openapi.JSONRoute(reqSchema, resSchema, successStatus), opts)
-	r.PATCH(path, h, all...)
-}
-
-func (r *Router) DELETEJSON(path string, h echolib.HandlerFunc, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := openapi.MergeOptionSlices(openapi.JSONRoute(nil, resSchema, successStatus), opts)
-	r.DELETE(path, h, all...)
-}
-
-func (g *Group) GETJSON(p string, h echolib.HandlerFunc, resSchema any, opts ...HandlerOption) {
-	all := openapi.MergeOptionSlices(openapi.JSONRoute(nil, resSchema, http.StatusOK), opts)
-	g.GET(p, h, all...)
-}
-func (g *Group) POSTJSON(p string, h echolib.HandlerFunc, reqSchema any, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := openapi.MergeOptionSlices(openapi.JSONRoute(reqSchema, resSchema, successStatus), opts)
-	g.POST(p, h, all...)
-}
-func (g *Group) PUTJSON(p string, h echolib.HandlerFunc, reqSchema any, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := openapi.MergeOptionSlices(openapi.JSONRoute(reqSchema, resSchema, successStatus), opts)
-	g.PUT(p, h, all...)
-}
-func (g *Group) PATCHJSON(p string, h echolib.HandlerFunc, reqSchema any, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := openapi.MergeOptionSlices(openapi.JSONRoute(reqSchema, resSchema, successStatus), opts)
-	g.PATCH(p, h, all...)
-}
-func (g *Group) DELETEJSON(p string, h echolib.HandlerFunc, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := openapi.MergeOptionSlices(openapi.JSONRoute(nil, resSchema, successStatus), opts)
-	g.DELETE(p, h, all...)
-}
+// NOTE: Typed (generic) handler helpers were removed to keep the API simple.
 
 // Group allows applying shared options (e.g., tags/security) and a common path prefix.
 type Group struct {

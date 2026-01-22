@@ -29,34 +29,10 @@ var (
 
 // Re-export helpers.
 var (
-	Register   = openapi.Register
-	Bind       = openapi.Bind
-	JSON       = openapi.JSON
-	PathValue  = openapi.PathValue
-	BuildSpec  = openapi.BuildSpec
-	HTTPMethod = http.MethodGet
+	Register  = openapi.Register
+	Bind      = openapi.Bind
+	JSON      = openapi.JSON
+	PathValue = openapi.PathValue
+	BuildSpec = openapi.BuildSpec
+	_         = http.MethodGet
 )
-
-// TypedHandler enables full-auto schema via type parameters.
-type TypedHandler[TReq any, TRes any] = openapi.TypedHandler[TReq, TRes]
-
-// Full auto schema helpers (generic). These attach request/response schema automatically.
-func GETT[TReq any, TRes any](r *Router, path string, h TypedHandler[TReq, TRes], opts ...HandlerOption) {
-	openapi.GETT[TReq, TRes](r, path, h, opts...)
-}
-
-func POSTT[TReq any, TRes any](r *Router, path string, h TypedHandler[TReq, TRes], opts ...HandlerOption) {
-	openapi.POSTT[TReq, TRes](r, path, h, opts...)
-}
-
-func PUTT[TReq any, TRes any](r *Router, path string, h TypedHandler[TReq, TRes], opts ...HandlerOption) {
-	openapi.PUTT[TReq, TRes](r, path, h, opts...)
-}
-
-func PATCHT[TReq any, TRes any](r *Router, path string, h TypedHandler[TReq, TRes], opts ...HandlerOption) {
-	openapi.PATCHT[TReq, TRes](r, path, h, opts...)
-}
-
-func DELETET[TReq any, TRes any](r *Router, path string, h TypedHandler[TReq, TRes], opts ...HandlerOption) {
-	openapi.DELETET[TReq, TRes](r, path, h, opts...)
-}

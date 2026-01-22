@@ -92,73 +92,61 @@ func TestPathValue(t *testing.T) {
 	}
 }
 
-func TestTypedHandlersAutoSchema(t *testing.T) {
-	type Req struct {
-		Name string `json:"name"`
-	}
-	type Res struct {
-		ID string `json:"id"`
-	}
-
+func TestSecuritySchemesInSpec(t *testing.T) {
 	r := NewRouter()
 
-	POSTT[Req, Res](r, "/typed", func(w http.ResponseWriter, r *http.Request, req Req) (Res, int, error) {
-		_ = w
-		_ = r
-		return Res{ID: req.Name}, http.StatusCreated, nil
+	jwt := openapi3.NewSecurityRequirement().Authenticate("jwt")
+	r.POST("/users", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+	}, append(JSONRoute(tCreateUser{}, tUser{}, http.StatusCreated), WithSecurity(&jwt))...)
+
+	Register(r, Config{
+		Title:   "Test",
+		Version: "0.0.1",
+		SecuritySchemes: map[string]*openapi3.SecuritySchemeRef{
+			"jwt": {Value: &openapi3.SecurityScheme{Type: "http", Scheme: "bearer", BearerFormat: "JWT"}},
+		},
 	})
 
-	Register(r, Config{Title: "Typed", Version: "1"})
-
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/openapi.json", nil)
-	r.ServeHTTP(rec, req)
-
-	var doc openapi3.T
-	if err := json.Unmarshal(rec.Body.Bytes(), &doc); err != nil {
-		t.Fatalf("invalid json: %v", err)
+	doc := BuildSpec(r.Routes(), Config{Title: "T", Version: "1"})
+	p := doc.Paths.Find("/users")
+	if p == nil {
+		t.Fatalf("expected /users path")
 	}
-
-	p := doc.Paths.Find("/typed")
-	if p == nil || p.Post == nil {
-		t.Fatalf("expected POST operation for /typed")
+	if p.Post == nil {
+		t.Fatalf("expected POST /users")
 	}
-	if p.Post.RequestBody == nil || p.Post.RequestBody.Value == nil {
-		t.Fatalf("expected requestBody")
-	}
-	if len(p.Post.RequestBody.Value.Content) == 0 {
-		t.Fatalf("expected requestBody content schema")
-	}
-	if p.Post.Responses == nil {
-		t.Fatalf("expected responses")
-	}
-	resp := p.Post.Responses.Value("200")
-	if resp == nil || resp.Value == nil {
-		t.Fatalf("expected 200 response")
-	}
-	if len(resp.Value.Content) == 0 {
-		t.Fatalf("expected response content schema")
+	if p.Post.Security == nil || len(*p.Post.Security) == 0 {
+		t.Fatalf("expected security requirement")
 	}
 }
 
-func TestPathParamValueInt(t *testing.T) {
+func TestPathParamsInSpec(t *testing.T) {
 	r := NewRouter()
 	r.GET("/users/{id}", func(w http.ResponseWriter, req *http.Request) {
-		p, err := PathParamValue[int](req, "id")
-		if err != nil {
-			t.Fatalf("unexpected err: %v", err)
-		}
-		if !p.OK || p.Value != 123 {
-			t.Fatalf("expected 123, got %+v", p)
-		}
+		_ = PathValue(req, "id")
 		w.WriteHeader(http.StatusOK)
-	})
+	}, JSONRoute(nil, tUser{}, http.StatusOK)...)
 
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/users/123", nil)
-	r.ServeHTTP(rec, req)
-	if rec.Code != http.StatusOK {
-		t.Fatalf("expected 200 got %d", rec.Code)
+	doc := BuildSpec(r.Routes(), Config{Title: "T", Version: "1"})
+	p := doc.Paths.Find("/users/{id}")
+	if p == nil {
+		t.Fatalf("expected /users/{id} path")
+	}
+	if p.Get == nil {
+		t.Fatalf("expected GET /users/{id}")
+	}
+	if len(p.Get.Parameters) == 0 {
+		t.Fatalf("expected a path parameter to be inferred")
+	}
+	found := false
+	for _, pr := range p.Get.Parameters {
+		if pr.Value != nil && pr.Value.In == openapi3.ParameterInPath && pr.Value.Name == "id" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected path param id, got %#v", p.Get.Parameters)
 	}
 }
 

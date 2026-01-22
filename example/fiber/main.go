@@ -10,6 +10,7 @@ import (
 
 	"github.com/aizacoders/openapigo/adapters/fiber"
 	"github.com/aizacoders/openapigo/openapi"
+	"github.com/aizacoders/openapigo/openapi/simple"
 )
 
 type User struct {
@@ -30,8 +31,25 @@ type ErrorResponse struct {
 }
 
 func main() {
-	r := fiber.New()
+	base := fiber.New()
 
+	b := simple.NewSpec()
+	b.GroupTags("", []string{"Users"}, func(s *simple.SpecBuilder) {
+		s.GET("/users").Res([]User{}).OK()
+		s.GET("/search").Query(
+			openapi.QueryParam{Name: "q", Type: openapi.ParamString, Required: true, Description: "Search term"},
+			openapi.QueryParam{Name: "limit", Type: openapi.ParamInteger, Required: false, Description: "Max results"},
+		).Res(struct{}{}).OK()
+		s.POST("/users").Req(CreateUser{}).Res(struct{}{}).Created()
+		s.GET("/users/:id").Res(User{}).OK()
+		s.PUT("/users/:id").Req(UpdateUser{}).Res(User{}).OK()
+		s.PATCH("/users/:id").Req(UpdateUser{}).Res(User{}).OK()
+		s.DELETE("/users/:id").Res(struct{}{}).NoContent()
+	})
+
+	spec := b.Spec()
+
+	r := simple.NewFiber(base, spec)
 	users := r.Group("", fiber.WithTags("Users"))
 
 	users.GET("/users", func(c *fiberlib.Ctx) error {
@@ -41,18 +59,16 @@ func main() {
 	users.GET("/search", func(c *fiberlib.Ctx) error {
 		_ = c.Query("q")
 		return c.SendStatus(http.StatusOK)
-	}, fiber.WithQueryParams(
-		openapi.QueryParam{Name: "q", Type: openapi.ParamString, Required: true, Description: "Search term"},
-		openapi.QueryParam{Name: "limit", Type: openapi.ParamInteger, Required: false, Description: "Max results"},
-	))
+	})
 
-	users.POSTJSON("/users", func(c *fiberlib.Ctx) error {
+	users.POST("/users", func(c *fiberlib.Ctx) error {
 		var in CreateUser
-		if err := c.BodyParser(&in); err != nil {
-			return fiber.JSON(c, http.StatusBadRequest, ErrorResponse{Error: "invalid body"})
+		if err := fiber.Bind(c, &in); err != nil || in.Name == "" {
+			_ = fiber.JSON(c, http.StatusBadRequest, ErrorResponse{Error: "invalid body"})
+			return nil
 		}
 		return c.SendStatus(http.StatusCreated)
-	}, CreateUser{}, struct{}{}, http.StatusCreated)
+	})
 
 	users.GET("/users/:id", func(c *fiberlib.Ctx) error {
 		id := c.Params("id")
@@ -62,44 +78,47 @@ func main() {
 		return fiber.JSON(c, http.StatusOK, User{ID: id, Name: "Alice"})
 	})
 
-	users.PUTJSON("/users/:id", func(c *fiberlib.Ctx) error {
+	users.PUT("/users/:id", func(c *fiberlib.Ctx) error {
 		id := c.Params("id")
 		var in UpdateUser
-		if err := c.BodyParser(&in); err != nil {
-			return fiber.JSON(c, http.StatusBadRequest, ErrorResponse{Error: "invalid body"})
+		if err := fiber.Bind(c, &in); err != nil {
+			_ = fiber.JSON(c, http.StatusBadRequest, ErrorResponse{Error: "invalid body"})
+			return nil
 		}
 		if id == "404" {
-			return fiber.JSON(c, http.StatusNotFound, ErrorResponse{Error: "user not found"})
+			_ = fiber.JSON(c, http.StatusNotFound, ErrorResponse{Error: "user not found"})
+			return nil
 		}
 		return fiber.JSON(c, http.StatusOK, User{ID: id, Name: in.Name})
-	}, UpdateUser{}, User{}, http.StatusOK)
+	})
 
-	users.PATCHJSON("/users/:id", func(c *fiberlib.Ctx) error {
+	users.PATCH("/users/:id", func(c *fiberlib.Ctx) error {
 		id := c.Params("id")
 		var in UpdateUser
-		if err := c.BodyParser(&in); err != nil {
-			return fiber.JSON(c, http.StatusBadRequest, ErrorResponse{Error: "invalid body"})
+		if err := fiber.Bind(c, &in); err != nil {
+			_ = fiber.JSON(c, http.StatusBadRequest, ErrorResponse{Error: "invalid body"})
+			return nil
 		}
 		if id == "404" {
-			return fiber.JSON(c, http.StatusNotFound, ErrorResponse{Error: "user not found"})
+			_ = fiber.JSON(c, http.StatusNotFound, ErrorResponse{Error: "user not found"})
+			return nil
 		}
 		return fiber.JSON(c, http.StatusOK, User{ID: id, Name: in.Name})
-	}, UpdateUser{}, User{}, http.StatusOK)
+	})
 
-	users.DELETEJSON("/users/:id", func(c *fiberlib.Ctx) error {
+	users.DELETE("/users/:id", func(c *fiberlib.Ctx) error {
 		id := c.Params("id")
 		if id == "404" {
-			return fiber.JSON(c, http.StatusNotFound, ErrorResponse{Error: "user not found"})
+			_ = fiber.JSON(c, http.StatusNotFound, ErrorResponse{Error: "user not found"})
+			return nil
 		}
 		return c.SendStatus(http.StatusNoContent)
-	}, struct{}{}, http.StatusNoContent)
+	})
 
-	fiber.Register(r, openapi.Config{
+	fiber.Register(base, openapi.Config{
 		Title:   "User API",
 		Version: "1.0.0",
-		Tags: openapi3.Tags{
-			{Name: "Users", Description: "User management endpoints"},
-		},
+		Tags:    openapi3.Tags{{Name: "Users", Description: "User management endpoints"}},
 	})
-	_ = r.App.Listen(":8080")
+	_ = base.App.Listen(":8080")
 }

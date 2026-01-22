@@ -33,6 +33,27 @@ func BuildSpec(routes []RouteMeta, cfg Config) *openapi3.T {
 		}
 	}
 
+	// Config-only registered schemas
+	if cfg.Schemas != nil {
+		for name, sample := range cfg.Schemas {
+			if strings.TrimSpace(name) == "" || sample == nil {
+				continue
+			}
+			// Infer schema and then pin it under the provided component name.
+			sr := infer.SchemaFrom(doc, sample)
+			if doc.Components.Schemas == nil {
+				doc.Components.Schemas = map[string]*openapi3.SchemaRef{}
+			}
+			// If the inferred schema is a $ref, try to copy the referenced schema; otherwise, store Value.
+			if sr.Ref != "" {
+				// best-effort: if it references an existing component, alias it
+				doc.Components.Schemas[name] = &openapi3.SchemaRef{Ref: sr.Ref}
+			} else {
+				doc.Components.Schemas[name] = sr
+			}
+		}
+	}
+
 	for _, route := range routes {
 		path := infer.NormalizePath(route.Path)
 		op := &openapi3.Operation{
@@ -72,6 +93,11 @@ func BuildSpec(routes []RouteMeta, cfg Config) *openapi3.T {
 		// Query parameters (declared via WithQueryParams)
 		if len(route.QueryParams) > 0 {
 			addQueryParams(op, route.QueryParams)
+		}
+
+		// Header parameters (declared via WithHeaderParams)
+		if len(route.HeaderParams) > 0 {
+			addHeaderParams(op, route.HeaderParams)
 		}
 
 		if route.RequestSchema != nil {

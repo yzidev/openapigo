@@ -73,28 +73,3 @@ func (g *Group) PATCH(p string, h http.HandlerFunc, opts ...HandlerOption) {
 func (g *Group) DELETE(p string, h http.HandlerFunc, opts ...HandlerOption) {
 	g.Handle(http.MethodDelete, p, h, opts...)
 }
-
-func (g *Group) GETJSON(p string, h http.HandlerFunc, resSchema any, opts ...HandlerOption) {
-	all := MergeOptionSlices(JSONRoute(nil, resSchema, http.StatusOK), opts)
-	g.GET(p, h, all...)
-}
-
-func (g *Group) POSTJSON(p string, h http.HandlerFunc, reqSchema any, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := MergeOptionSlices(JSONRoute(reqSchema, resSchema, successStatus), opts)
-	g.POST(p, h, all...)
-}
-
-func (g *Group) PUTJSON(p string, h http.HandlerFunc, reqSchema any, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := MergeOptionSlices(JSONRoute(reqSchema, resSchema, successStatus), opts)
-	g.PUT(p, h, all...)
-}
-
-func (g *Group) PATCHJSON(p string, h http.HandlerFunc, reqSchema any, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := MergeOptionSlices(JSONRoute(reqSchema, resSchema, successStatus), opts)
-	g.PATCH(p, h, all...)
-}
-
-func (g *Group) DELETEJSON(p string, h http.HandlerFunc, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := MergeOptionSlices(JSONRoute(nil, resSchema, successStatus), opts)
-	g.DELETE(p, h, all...)
-}

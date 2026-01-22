@@ -20,6 +20,7 @@ type RouteMeta struct {
 	Responses      []ResponseSpec
 	Security       *openapi3.SecurityRequirement
 	QueryParams    []QueryParam
+	HeaderParams   []HeaderParam
 	PathParams     []PathParamSpec
 }
 
@@ -103,34 +104,6 @@ func (r *Router) HEAD(path string, h http.HandlerFunc, opts ...HandlerOption) {
 
 func (r *Router) OPTIONS(path string, h http.HandlerFunc, opts ...HandlerOption) {
 	r.Handle(http.MethodOptions, path, h, opts...)
-}
-
-// GETJSON registers a JSON endpoint with a response schema sample.
-// It declares the primary success response (default 200) and lets builder add default errors.
-func (r *Router) GETJSON(path string, h http.HandlerFunc, resSchema any, opts ...HandlerOption) {
-	all := MergeOptionSlices(JSONRoute(nil, resSchema, http.StatusOK), opts)
-	r.GET(path, h, all...)
-}
-
-// POSTJSON registers a JSON endpoint with request+response schema samples.
-func (r *Router) POSTJSON(path string, h http.HandlerFunc, reqSchema any, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := MergeOptionSlices(JSONRoute(reqSchema, resSchema, successStatus), opts)
-	r.POST(path, h, all...)
-}
-
-func (r *Router) PUTJSON(path string, h http.HandlerFunc, reqSchema any, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := MergeOptionSlices(JSONRoute(reqSchema, resSchema, successStatus), opts)
-	r.PUT(path, h, all...)
-}
-
-func (r *Router) PATCHJSON(path string, h http.HandlerFunc, reqSchema any, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := MergeOptionSlices(JSONRoute(reqSchema, resSchema, successStatus), opts)
-	r.PATCH(path, h, all...)
-}
-
-func (r *Router) DELETEJSON(path string, h http.HandlerFunc, resSchema any, successStatus int, opts ...HandlerOption) {
-	all := MergeOptionSlices(JSONRoute(nil, resSchema, successStatus), opts)
-	r.DELETE(path, h, all...)
 }
 
 func (r *Router) Routes() []RouteMeta {

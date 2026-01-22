@@ -1,9 +1,12 @@
 package ui
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
 type SwaggerUIConfig struct {
-	MountPath   string // default: /swagger
+	MountPath   string // default: /swagger-ui
 	SpecURLPath string // default: /openapi.json
 }
 
@@ -12,14 +15,27 @@ func RegisterSwaggerUI(mux interface {
 }, cfg SwaggerUIConfig) {
 	mount := cfg.MountPath
 	if mount == "" {
-		mount = "/swagger"
+		mount = "/swagger-ui"
 	}
+	if !strings.HasPrefix(mount, "/") {
+		mount = "/" + mount
+	}
+	mount = strings.TrimSuffix(mount, "/")
+
 	spec := cfg.SpecURLPath
 	if spec == "" {
 		spec = "/openapi.json"
 	}
 
-	mux.Get(mount, func(w http.ResponseWriter, _ *http.Request) {
+	indexPath := mount + "/index.html"
+	redirectHTML := func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, indexPath+"#/", http.StatusFound)
+	}
+
+	// New canonical paths
+	mux.Get(mount, redirectHTML)
+	mux.Get(mount+"/", redirectHTML)
+	mux.Get(indexPath, func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		_, _ = w.Write([]byte(`
 <!DOCTYPE html>
@@ -41,4 +57,10 @@ SwaggerUIBundle({
 </html>
 `))
 	})
+
+	// Legacy: /swagger should redirect to new canonical UI.
+	if mount != "/swagger" {
+		mux.Get("/swagger", redirectHTML)
+		mux.Get("/swagger/", redirectHTML)
+	}
 }
