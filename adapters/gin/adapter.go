@@ -4,6 +4,7 @@ package gin
 
 import (
 	"net/http"
+	"path"
 	"reflect"
 	"strings"
 
@@ -38,6 +39,75 @@ var (
 	WithQueryParams    = openapi.WithQueryParams
 	JSONRoute          = openapi.JSONRoute
 )
+
+// Group allows applying shared options (e.g., WithTags) and a common path prefix
+// to multiple routes when using the Gin adapter.
+//
+// Example:
+//
+//	api := r.Group("", WithTags("Users"))
+//	api.GET("/users", ...)
+//
+// Options provided to the group are applied to every route in that group.
+type Group struct {
+	prefix string
+	opts   []HandlerOption
+	route  func(method, path string, h ginlib.HandlerFunc, opts ...HandlerOption)
+}
+
+func (r *Router) Group(prefix string, opts ...HandlerOption) *Group {
+	return &Group{
+		prefix: prefix,
+		opts:   opts,
+		route:  r.Handle,
+	}
+}
+
+func (g *Group) join(p string) string {
+	if g.prefix == "" {
+		return p
+	}
+	if p == "" {
+		return g.prefix
+	}
+	j := path.Join(g.prefix, p)
+	if strings.HasSuffix(p, "/") && !strings.HasSuffix(j, "/") {
+		j += "/"
+	}
+	if !strings.HasPrefix(j, "/") {
+		j = "/" + j
+	}
+	return j
+}
+
+func (g *Group) Handle(method, p string, h ginlib.HandlerFunc, opts ...HandlerOption) {
+	all := make([]HandlerOption, 0, len(g.opts)+len(opts))
+	all = append(all, g.opts...)
+	all = append(all, opts...)
+	g.route(method, g.join(p), h, all...)
+}
+
+func (g *Group) GET(p string, h ginlib.HandlerFunc, opts ...HandlerOption) {
+	g.Handle(http.MethodGet, p, h, opts...)
+}
+func (g *Group) POST(p string, h ginlib.HandlerFunc, opts ...HandlerOption) {
+	g.Handle(http.MethodPost, p, h, opts...)
+}
+func (g *Group) PUT(p string, h ginlib.HandlerFunc, opts ...HandlerOption) {
+	g.Handle(http.MethodPut, p, h, opts...)
+}
+func (g *Group) DELETE(p string, h ginlib.HandlerFunc, opts ...HandlerOption) {
+	g.Handle(http.MethodDelete, p, h, opts...)
+}
+func (g *Group) PATCH(p string, h ginlib.HandlerFunc, opts ...HandlerOption) {
+	g.Handle(http.MethodPatch, p, h, opts...)
+}
+func (g *Group) HEAD(p string, h ginlib.HandlerFunc, opts ...HandlerOption) {
+	g.Handle(http.MethodHead, p, h, opts...)
+}
+func (g *Group) OPTIONS(p string, h ginlib.HandlerFunc, opts ...HandlerOption) {
+	g.Handle(http.MethodOptions, p, h, opts...)
+}
 
 func (r *Router) Handle(method, path string, h ginlib.HandlerFunc, opts ...HandlerOption) {
 	meta := openapi.RouteMeta{Method: method, Path: path}

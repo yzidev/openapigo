@@ -20,8 +20,22 @@ type CreateUserTyped struct {
 	Name string `json:"name"`
 }
 
+type HealthResponse struct {
+	Status string `json:"status"`
+}
+
 func main() {
 	r := gin.New()
+
+	// Sample route WITHOUT group: typed + direct registration.
+	// Keep it simple: no MergeOptionSlices.
+	healthOpts := append(
+		[]gin.HandlerOption{gin.WithTags("System")},
+		gin.JSONRoute(struct{}{}, HealthResponse{}, http.StatusOK)...,
+	)
+	gin.GETT[struct{}, HealthResponse](r, "/typed/healthz", func(c *ginlib.Context, _ struct{}) (HealthResponse, int, error) {
+		return HealthResponse{Status: "ok"}, http.StatusOK, nil
+	}, healthOpts...)
 
 	typedOpts := []gin.HandlerOption{gin.WithTags("Typed")}
 

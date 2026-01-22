@@ -32,6 +32,15 @@ type ErrorResponse struct {
 func main() {
 	r := gin.New()
 
+	// Sample route WITHOUT group: register directly on router.
+	// Keep it simple: no MergeOptionSlices.
+	r.GET("/healthz", func(c *ginlib.Context) {
+		gin.JSON(c, http.StatusOK, map[string]string{"status": "ok"})
+	}, append(
+		[]gin.HandlerOption{gin.WithTags("System")},
+		gin.JSONRoute(struct{}{}, map[string]string{}, http.StatusOK)...,
+	)...)
+
 	users := r.Group("", gin.WithTags("Users"))
 
 	users.GET("/users", func(c *ginlib.Context) {

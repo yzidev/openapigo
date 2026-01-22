@@ -26,6 +26,10 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
+type SecureHealth struct {
+	Status string `json:"status"`
+}
+
 func main() {
 	r := gin.New()
 
@@ -41,13 +45,26 @@ func main() {
 	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
 	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
 
+	// Sample route WITHOUT group: typed + security + direct registration.
+	secureHealthOpts := append(
+		[]gin.HandlerOption{gin.WithTags("System"), gin.WithSecurity(&bearer)},
+		gin.JSONRoute(struct{}{}, SecureHealth{}, http.StatusOK)...,
+	)
+	gin.GETT[struct{}, SecureHealth](r, "/secure/typed/healthz", func(c *ginlib.Context, _ struct{}) (SecureHealth, int, error) {
+		auth := c.GetHeader("Authorization")
+		if !strings.HasPrefix(auth, "Bearer ") {
+			return SecureHealth{}, http.StatusUnauthorized, nil
+		}
+		return SecureHealth{Status: "ok"}, http.StatusOK, nil
+	}, secureHealthOpts...)
+
 	secureOpts := []gin.HandlerOption{gin.WithTags("Secure Users")}
 
-	postOpts := openapi.MergeOptionSlices(
-		secureOpts,
-		[]gin.HandlerOption{gin.WithSecurity(&bearer)},
-		gin.JSONRoute(SecCreateUser{}, SecUser{}, http.StatusCreated),
+	postOpts := append(
+		append([]gin.HandlerOption{}, secureOpts...),
+		gin.WithSecurity(&bearer),
 	)
+	postOpts = append(postOpts, gin.JSONRoute(SecCreateUser{}, SecUser{}, http.StatusCreated)...)
 	gin.POSTT[SecCreateUser, SecUser](r, "/secure/users", func(c *ginlib.Context, in SecCreateUser) (SecUser, int, error) {
 		auth := c.GetHeader("Authorization")
 		if !strings.HasPrefix(auth, "Bearer ") {
@@ -56,11 +73,11 @@ func main() {
 		return SecUser{ID: "1", Name: in.Name}, http.StatusCreated, nil
 	}, postOpts...)
 
-	getOpts := openapi.MergeOptionSlices(
-		secureOpts,
-		[]gin.HandlerOption{gin.WithSecurity(&apiKey)},
-		gin.JSONRoute(struct{}{}, []SecUser{}, http.StatusOK),
+	getOpts := append(
+		append([]gin.HandlerOption{}, secureOpts...),
+		gin.WithSecurity(&apiKey),
 	)
+	getOpts = append(getOpts, gin.JSONRoute(struct{}{}, []SecUser{}, http.StatusOK)...)
 	gin.GETT[struct{}, []SecUser](r, "/secure/users", func(c *ginlib.Context, _ struct{}) ([]SecUser, int, error) {
 		if c.GetHeader("X-API-Key") == "" {
 			return nil, http.StatusUnauthorized, nil
