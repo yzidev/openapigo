@@ -1,4 +1,4 @@
-package httprouter
+package mux
 
 import (
 	"net/http"

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/aizacoders/openapigo/adapters/httprouter"
+	muxadapter "github.com/aizacoders/openapigo/adapters/mux"
 	"github.com/aizacoders/openapigo/openapi"
 	"github.com/aizacoders/openapigo/openapi/simple"
 	"github.com/getkin/kin-openapi/openapi3"
@@ -211,7 +211,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Router setup by openapigo/httprouter adapter
-	base := httprouter.NewHttpAdapters(mux)
+	base := muxadapter.NewHttpAdapters(mux)
 	r := simple.NewHttpRouter(base, openapiSpec())
 
 	// Clean routes: just HTTP methods + handlers.
@@ -231,7 +231,7 @@ func main() {
 	api2.POST("/users", api2CreateUser)
 	api2.GET("/users/{id}", api2GetUser)
 
-	httprouter.Register(base, openapi.Config{
+	muxadapter.Register(base, openapi.Config{
 		Title:   "User API",
 		Version: "1.0.0",
 		Tags: openapi3.Tags{
