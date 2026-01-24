@@ -1,10 +1,27 @@
-# OpenAPIGO
+# Openapigo 
 
 [![CI](https://github.com/aizacoders/openapigo/actions/workflows/ci.yml/badge.svg)](https://github.com/aizacoders/openapigo/actions/workflows/ci.yml)
 
 Auto-generate **OpenAPI 3.x** from your Go route registrations.
 
 The goal is to keep your routing code **clean** (plain `GET/POST/PUT/PATCH/DELETE`) while still producing a good OpenAPI spec + Swagger UI.
+
+---
+
+Background and motivation
+
+Creating OpenAPI (OpenAPI 3.x) documentation for Go projects is often tedious and error-prone. Most common workflows require hand-maintaining large YAML or JSON files that declare the entire API surface — types, request/response schemas, parameters, security schemes, and more. For medium to large APIs this quickly becomes unmanageable: teams may end up with thousands of lines of YAML (10k+ lines is not unusual) that must be edited and kept in sync with code changes.
+
+Every change to a handler, request/response type, or parameter often means manually editing the documentation files. This duplication increases the risk of inconsistencies, stale docs, and significant maintenance overhead. Compared to frameworks like Spring Boot or FastAPI — which offer more integrated or declarative approaches for keeping API docs close to code — the Go ecosystem has historically lacked a lightweight, ergonomic solution for automatic OpenAPI generation.
+
+OpenAPIGO was created to bridge that gap. Instead of writing a YAML entry for every endpoint, OpenAPIGO captures route registrations and a small, config-first specification to generate a complete OpenAPI document and Swagger UI automatically. The goals are:
+
+- Eliminate the need to maintain huge, hand-written OpenAPI YAML files.
+- Keep handlers idiomatic and minimal while centralizing schema metadata in a compact config.
+- Reduce duplication and human error by generating docs from the same source of truth as your routes.
+- Provide practical features teams need (multipart uploads, security schemes, grouped tags) so large APIs remain maintainable and well-documented.
+
+This README continues with the features you get and examples on how to use the library.
 
 ---
 
