@@ -126,12 +126,15 @@ func BuildSpec(routes []RouteMeta, cfg Config) *openapi3.T {
 			op.RequestBody = &openapi3.RequestBodyRef{Value: &openapi3.RequestBody{Required: true, Content: content}}
 		}
 
-		// Default response behavior (backward-compatible)
-		if route.ResponseSchema != nil {
-			schemaRef := infer.ResponseSchema(doc, route.ResponseSchema)
-			op.Responses.Set("200", &openapi3.ResponseRef{Value: &openapi3.Response{Description: ptr("OK"), Content: openapi3.NewContentWithJSONSchemaRef(schemaRef)}})
-		} else {
-			op.Responses.Set("200", &openapi3.ResponseRef{Value: &openapi3.Response{Description: ptr("OK")}})
+		// Default response behavior. If a route declares an explicit 2xx response,
+		// treat that as the primary success response instead of also adding 200.
+		if !hasSuccessResponse(route.Responses) {
+			if route.ResponseSchema != nil {
+				schemaRef := infer.ResponseSchema(doc, route.ResponseSchema)
+				op.Responses.Set("200", &openapi3.ResponseRef{Value: &openapi3.Response{Description: ptr("OK"), Content: openapi3.NewContentWithJSONSchemaRef(schemaRef)}})
+			} else {
+				op.Responses.Set("200", &openapi3.ResponseRef{Value: &openapi3.Response{Description: ptr("OK")}})
+			}
 		}
 
 		// Additional/override responses (errors, other success statuses)
@@ -253,4 +256,13 @@ func firstNonEmpty(v, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func hasSuccessResponse(responses []ResponseSpec) bool {
+	for _, rr := range responses {
+		if rr.Status >= 200 && rr.Status < 300 {
+			return true
+		}
+	}
+	return false
 }

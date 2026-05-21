@@ -34,46 +34,24 @@ This section shows how to wire the default HTTP router with OpenAPIGO in your pr
 import (
     "net/http"
 
-    "github.com/aizacoders/openapigo/adapters/httprouter"
+    "github.com/aizacoders/openapigo/adapters/muxadapter"
     "github.com/aizacoders/openapigo/openapi"
-    "github.com/aizacoders/openapigo/openapi/oas"
 )
 ```
 
-2) Create the router and build your Spec
+2) Create the router
 
 ```go
-// Option A: create a ServeMux and let the adapter mount the router for you
 mux := http.NewServeMux()
-base := httprouter.New(mux)
-
-// Option B: create router and mount manually
-// base := httprouter.New()
-// mux := http.NewServeMux()
-// mux.Handle("/", base)
-
-b := simple.NewSpec()
-b.GroupTags("/", []string{"Users"}, func(s *simple.SpecBuilder) {
-    s.GET("/users").Res([]User{}).OK()
-    s.POST("/users").Req(CreateUser{}).Res(User{}).Created()
-    // multipart upload examples
-    s.POST("/users/upload").MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}).Res(map[string]string{}).OK()
-})
-spec := b.Spec()
+r := muxadapter.New(mux)
 ```
 
-3) Create the `simple` wrapper that injects spec defaults
-
-```go
-r := simple.New(base, spec)
-```
-
-4) Register handlers using the plain HTTP handler signature
+3) Register handlers using route options
 
 ```go
 r.GET("/users", func(w http.ResponseWriter, _ *http.Request) {
     openapi.JSON(w, http.StatusOK, []User{{ID: "1", Name: "Alice"}})
-})
+}, openapi.Res([]User{}), openapi.Tags("Users"))
 
 r.POST("/users", func(w http.ResponseWriter, req *http.Request) {
     var in CreateUser
@@ -82,27 +60,32 @@ r.POST("/users", func(w http.ResponseWriter, req *http.Request) {
         return
     }
     w.WriteHeader(http.StatusCreated)
-})
+}, openapi.Req(CreateUser{}), openapi.Res(User{}), openapi.Created(), openapi.Tags("Users"))
+
+r.POST("/users/upload", uploadUserFile,
+    openapi.MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}),
+    openapi.Res(map[string]string{}),
+    openapi.Tags("Users"),
+)
 ```
 
-5) Mount OpenAPI JSON + Swagger UI on the router and run
+4) Mount OpenAPI JSON + Swagger UI on the router and run
 
 ```go
-httprouter.Register(base, openapi.Config{Title: "User API", Version: "1.0.0"})
-_ = http.ListenAndServe(":8080", mux) // serve the ServeMux that has the router mounted
+r.Docs(openapi.Config{Title: "User API", Version: "1.0.0"})
+_ = http.ListenAndServe(":8080", mux)
 ```
 
-6) Security (optional)
+5) Security (optional)
 
-- Define schemes in `openapi.Config.SecuritySchemes` and attach per-route via `RouteBuilder.Security` in the Spec builder.
+- Define schemes in `openapi.Config.SecuritySchemes` and attach per-route via `openapi.Security(...)`.
 
-7) Multipart uploads
+6) Multipart uploads
 
-- Use `MultipartUpload(...)` in the spec to declare a `multipart/form-data` body with a file field; the Swagger UI will render a file chooser and corresponding fields.
+- Use `openapi.MultipartUpload(...)` to declare a `multipart/form-data` body with a file field; the Swagger UI will render a file chooser and corresponding fields.
 
 ---
 
 ## Notes
 
-- Examples follow the pattern: build a router/engine, (wrap with adapter when applicable), build spec via `simple.NewSpec()` and then use `simple.New*` wrappers.
-- Prefer `simple.New` for net/http example to keep handler signatures standard and clean.
+- Examples follow the pattern: build a router/engine, register routes with short OpenAPI options, call `Docs(...)`, then run.

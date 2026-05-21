@@ -21,7 +21,10 @@ type Router struct {
 	routes []openapi.RouteMeta
 }
 
-func New() *Router {
+func New(engine ...*ginlib.Engine) *Router {
+	if len(engine) > 0 {
+		return Wrap(engine[0])
+	}
 	return &Router{Engine: ginlib.New()}
 }
 
@@ -29,6 +32,11 @@ func New() *Router {
 // who create their own engine (e.g., gin.Default()) can still use the adapter
 // helpers and OpenAPI registration without changing import paths.
 func NewGinAdapters(engine *ginlib.Engine) *Router {
+	return Wrap(engine)
+}
+
+// Wrap converts an existing Gin engine into an OpenAPIGO router adapter.
+func Wrap(engine *ginlib.Engine) *Router {
 	if engine == nil {
 		engine = ginlib.New()
 	}
@@ -44,6 +52,17 @@ var (
 	WithTags           = openapi.WithTags
 	WithResponses      = openapi.WithResponses
 	WithQueryParams    = openapi.WithQueryParams
+	Req                = openapi.Req
+	MultipartUpload    = openapi.MultipartUpload
+	Res                = openapi.Res
+	Tags               = openapi.Tags
+	Security           = openapi.Security
+	Query              = openapi.Query
+	Headers            = openapi.Headers
+	Status             = openapi.Status
+	Created            = openapi.Created
+	NoContent          = openapi.NoContent
+	Responses          = openapi.Responses
 	JSONRoute          = openapi.JSONRoute
 )
 
@@ -149,6 +168,11 @@ func (r *Router) OPTIONS(path string, h ginlib.HandlerFunc, opts ...HandlerOptio
 }
 
 func (r *Router) Routes() []openapi.RouteMeta { return r.routes }
+
+// Docs mounts the generated OpenAPI JSON document and Swagger UI.
+func (r *Router) Docs(cfg openapi.Config) {
+	Register(r, cfg)
+}
 
 // Register mounts /openapi.json and Swagger UI and uses captured routes.
 func Register(r *Router, cfg openapi.Config) {

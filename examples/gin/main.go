@@ -4,7 +4,6 @@ package main
 
 import (
 	"github.com/aizacoders/openapigo/adapters/ginadapter"
-	"github.com/aizacoders/openapigo/openapi/oas"
 	ginlib "github.com/gin-gonic/gin"
 )
 
@@ -28,13 +27,11 @@ type ErrorResponse struct {
 func main() {
 	engine := ginlib.New()
 
-	// wrap existing engine into adapter router so OpenAPI metadata is captured
-	r := ginadapter.NewGinAdapters(engine)
-	sr := oas.NewGinRouter(r, openapiSpec())
+	r := ginadapter.Wrap(engine)
 
-	registerSystemRoutes(sr)
-	registerUserRoutes(sr)
+	registerSystemRoutes(r)
+	registerUserRoutes(r)
 
-	ginadapter.Register(r, openAPICfg())
+	r.Docs(openAPICfg())
 	_ = r.Engine.Run(":8080")
 }

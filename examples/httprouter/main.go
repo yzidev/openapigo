@@ -8,7 +8,6 @@ import (
 
 	"github.com/aizacoders/openapigo/adapters/muxadapter"
 	"github.com/aizacoders/openapigo/openapi"
-	"github.com/aizacoders/openapigo/openapi/oas"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
@@ -174,72 +173,42 @@ func api2GetUser(w http.ResponseWriter, req *http.Request) {
 	_ = json.NewEncoder(w).Encode(User{ID: id, Name: "API2 User"})
 }
 
-// openapiSpec builds the OpenAPI spec for the examples (keeps main() clean),
-// includes both API v1.0 and v2.0 groups to mirror the routes in main().
-func openapiSpec() oas.Spec {
-	b := oas.NewSpec()
-
-	// API v1.0 (Users)
-	b.GroupTags("/api/v1.0", []string{"Users"}, func(s *oas.SpecBuilder) {
-		s.GET("/users").Res([]User{}).OK()
-		s.GET("/search").Query(
-			openapi.QueryParam{Name: "q", Type: openapi.ParamString, Required: true, Description: "Search term"},
-			openapi.QueryParam{Name: "limit", Type: openapi.ParamInteger, Required: false, Description: "Max results"},
-		).Res(struct{}{}).OK()
-		// Create user returns created resource (status 201)
-		s.POST("/users").Req(CreateUser{}).Res(User{}).Created()
-		// Upload user file: multipart/form-data.
-		s.POST("/users/upload").MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}).Res(map[string]string{}).OK()
-		s.GET("/users/{id}").Res(User{}).OK()
-		s.PUT("/users/{id}").Req(UpdateUser{}).Res(User{}).OK()
-		s.PATCH("/users/{id}").Req(UpdateUser{}).Res(User{}).OK()
-		s.DELETE("/users/{id}").Res(struct{}{}).NoContent()
-	})
-
-	// API v2.0 (Users V2.0) - smaller surface per main.go: hello + users create/get
-	b.GroupTags("/api/v2.0", []string{"Users V2.0"}, func(s *oas.SpecBuilder) {
-		s.GET("/hello").Res(map[string]string{}).OK()
-		// v2 create returns the created user object
-		s.POST("/users").Req(CreateUser{}).Res(User{}).Created()
-		s.GET("/users/{id}").Res(User{}).OK()
-	})
-
-	return b.Spec()
-}
-
 func main() {
 	mux := http.NewServeMux()
 
-	// Router setup by openapigo/httprouter adapter
-	base := muxadapter.NewHttpAdapters(mux)
-	r := oas.NewHttpRouter(base, openapiSpec())
+	r := muxadapter.New(mux)
 
-	// Clean routes: just HTTP methods + handlers.
-	users := r.Group("/api/v1.0", openapi.WithTags("Users"))
-	users.GET("/users", listUsers)
-	users.GET("/search", searchUsers)
-	users.POST("/users", createUser)
-	users.POST("/users/upload", uploadUserFile)
-	users.GET("/users/{id}", getUser)
-	users.PUT("/users/{id}", putUser)
-	users.PATCH("/users/{id}", patchUser)
-	users.DELETE("/users/{id}", deleteUser)
+	users := r.Group("/api/v1.0", openapi.Tags("Users"))
+	users.GET("/users", listUsers, openapi.Res([]User{}))
+	users.GET("/search", searchUsers,
+		openapi.Query(
+			openapi.QueryParam{Name: "q", Type: openapi.ParamString, Required: true, Description: "Search term"},
+			openapi.QueryParam{Name: "limit", Type: openapi.ParamInteger, Required: false, Description: "Max results"},
+		),
+		openapi.Res(struct{}{}),
+	)
+	users.POST("/users", createUser, openapi.Req(CreateUser{}), openapi.Res(User{}), openapi.Created())
+	users.POST("/users/upload", uploadUserFile,
+		openapi.MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}),
+		openapi.Res(map[string]string{}),
+	)
+	users.GET("/users/{id}", getUser, openapi.Res(User{}))
+	users.PUT("/users/{id}", putUser, openapi.Req(UpdateUser{}), openapi.Res(User{}))
+	users.PATCH("/users/{id}", patchUser, openapi.Req(UpdateUser{}), openapi.Res(User{}))
+	users.DELETE("/users/{id}", deleteUser, openapi.NoContent())
 
-	// --- API2: separate group that uses default writer (encoding/json) instead of openapi.JSON
-	api2 := r.Group("/api/v2.0", openapi.WithTags("Users V2.0"))
-	api2.GET("/hello", api2Hello)
-	api2.POST("/users", api2CreateUser)
-	api2.GET("/users/{id}", api2GetUser)
+	api2 := r.Group("/api/v2.0", openapi.Tags("Users V2.0"))
+	api2.GET("/hello", api2Hello, openapi.Res(map[string]string{}))
+	api2.POST("/users", api2CreateUser, openapi.Req(CreateUser{}), openapi.Res(User{}), openapi.Created())
+	api2.GET("/users/{id}", api2GetUser, openapi.Res(User{}))
 
-	muxadapter.Register(base, openapi.Config{
+	r.Docs(openapi.Config{
 		Title:   "User API",
 		Version: "1.0.0",
 		Tags: openapi3.Tags{
 			{Name: "Users", Description: "User management endpoints"},
 		},
 	})
-
-	// Server: ServeMux already has the router mounted by httprouter.New(mux)
 
 	_ = http.ListenAndServe(":8080", mux)
 }

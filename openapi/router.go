@@ -30,6 +30,7 @@ type RouteMeta struct {
 // behavior needed by the OpenAPI builder (path param extraction via context).
 type Router struct {
 	Mux    *httpMux
+	config Config
 	routes []RouteMeta
 }
 
@@ -38,10 +39,34 @@ func (r *Router) Get(path string, h http.HandlerFunc) {
 	r.Mux.MethodFunc(http.MethodGet, path, h)
 }
 
-func NewRouter() *Router {
-	return &Router{
+// New creates an OpenAPI-aware net/http router.
+//
+// Typical usage:
+//
+//	r := openapi.New(openapi.Config{Title: "User API", Version: "1.0.0"})
+//	r.GET("/users", listUsers, openapi.Res([]User{}), openapi.Tags("Users"))
+//	r.Docs()
+func New(cfg ...Config) *Router {
+	r := &Router{
 		Mux: newHTTPMux(),
 	}
+	if len(cfg) > 0 {
+		r.config = cfg[0]
+	}
+	return r
+}
+
+func NewRouter() *Router {
+	return New()
+}
+
+// Docs registers the OpenAPI JSON endpoint and Swagger UI using the router config.
+// Pass a Config here to override or set the config after New().
+func (r *Router) Docs(cfg ...Config) {
+	if len(cfg) > 0 {
+		r.config = cfg[0]
+	}
+	Register(r, r.config)
 }
 
 // HandlerOption configures RouteMeta.

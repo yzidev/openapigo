@@ -40,8 +40,9 @@ This README continues with the features you get and examples on how to use the l
 
 Use the built-in router:
 
-- `openapi.NewRouter()` → returns an `http.Handler` (lightweight net/http-backed router)
+- `openapi.New(...)` → returns an `http.Handler` (lightweight net/http-backed router)
 - register routes with `GET/POST/PUT/PATCH/DELETE`
+- call `Docs()` once after registering your routes to mount `/openapi.json` and Swagger UI
 
 Note: the default router implementation used to be chi-backed; it now uses a small net/http-based mux compatible with the project's needs. Adapters for Gin, Echo and Fiber remain available.
 
@@ -50,7 +51,7 @@ Note: the default router implementation used to be chi-backed; it now uses a sma
 Go handlers don’t expose schema information automatically.
 So OpenAPIGO uses a **config-first** approach:
 
-- put route schemas/tags/security/query/header params in one place using `openapi/simple`
+- put route schemas/tags/security/query/header params in one place using `openapi/spec`
 - keep your handlers clean and readable
 
 ### 3) Multipart upload support
@@ -76,7 +77,6 @@ import (
 	"net/http"
 
 	"github.com/aizacoders/openapigo/openapi"
-	"github.com/aizacoders/openapigo/openapi/simple"
 )
 
 type User struct {
@@ -85,37 +85,48 @@ type User struct {
 }
 
 func main() {
-	// If you prefer manual mounting you can do:
-	// mux := http.NewServeMux()
-	// base := openapi.NewRouter()
-	// mux.Handle("/", base)
-	// or simply mount the router directly via the httprouter adapter:
-	// base := httprouter.New(mux) // mounts automatically on provided ServeMux
-	base := openapi.NewRouter()
+	r := openapi.New(openapi.Config{Title: "User API", Version: "1.0.0"})
 
-	// 1) Define spec (grouped, clean)
-	b := simple.NewSpec()
-	b.GroupTags("", []string{"Users"}, func(s *simple.SpecBuilder) {
-		s.GET("/users").Res([]User{}).OK()
-	})
-
-	// 2) Mount routes (plain net/http handlers)
-	r := simple.New(base, b.Spec())
 	r.GET("/users", func(w http.ResponseWriter, _ *http.Request) {
 		openapi.JSON(w, http.StatusOK, []User{{ID: "1", Name: "Alice"}})
-	})
+	}, openapi.Res([]User{}), openapi.Tags("Users"))
 
-	// 3) Register OpenAPI + Swagger UI
-	openapi.Register(base, openapi.Config{Title: "User API", Version: "1.0.0"})
-	_ = http.ListenAndServe(":8080", base)
+	r.Docs()
+	_ = http.ListenAndServe(":8080", r)
 }
+```
+
+Prefer grouped config instead of per-route options? `openapi/spec` is still available as an advanced config-first layer:
+
+```go
+b := spec.New()
+b.GroupTags("", []string{"Users"}, func(s *spec.SpecBuilder) {
+	s.GET("/users").Res([]User{}).OK()
+})
+
+base := openapi.New(openapi.Config{Title: "User API", Version: "1.0.0"})
+r := spec.HTTP(base, b.Spec())
+r.GET("/users", listUsers)
+base.Docs()
 ```
 
 ---
 
 ## Multipart upload example
 
-In your spec:
+On a route:
+
+```go
+r.POST("/users/upload", uploadUserFile,
+	openapi.MultipartUpload(
+		"file",
+		openapi.MultipartField{Name: "note", Type: openapi.ParamString},
+	),
+	openapi.Res(map[string]string{}),
+)
+```
+
+In `openapi/spec`, the equivalent is:
 
 ```go
 s.POST("/users/upload").MultipartUpload(
@@ -194,7 +205,7 @@ The direction going forward:
 - **Keep the public API simple**:
   - common HTTP methods only: `GET/POST/PUT/PATCH/DELETE`
   - grouping via `Group(...)`
-  - OpenAPI metadata via config-first spec (`openapi/simple`)
+  - OpenAPI metadata via route options or config-first spec (`openapi/spec`)
 
 - **Improve schema inference gradually**:
   - better tag support (`omitempty`, pointer handling)
@@ -215,7 +226,7 @@ The direction going forward:
 ### Update policy / compatibility
 
 - The project is evolving quickly.
-- We aim to keep the **core API stable** (`openapi.Router`, `openapi.Register`, and `openapi/simple`).
+- We aim to keep the **core API stable** (`openapi.New`, `openapi.Router`, `openapi.Register`, and `openapi/spec`).
 - Adapter APIs may change as we simplify integration and keep parity across frameworks.
 
 ### Framework support timeline
@@ -254,9 +265,9 @@ handler code clean while still generating OpenAPI and mounting Swagger UI.
 Pattern (recommended):
 
 1. Create your framework engine/app (e.g., `gin`, `echo`, `fiber`).
-2. Wrap it with the adapter `NewGinAdapters` / `NewEchoAdapters` / `NewFiberAdapters` (so the adapter captures route metadata).
-3. Create the `simple` wrapper using the adapter and your `Spec`.
-4. Register OpenAPI via the adapter `Register` helper and run the engine/app.
+2. Wrap it with the adapter `Wrap`/`New` helper (so the adapter captures route metadata).
+3. Register routes with short options like `Res`, `Req`, `Tags`, and `Created`.
+4. Call `Docs(...)` and run the engine/app.
 
 Examples:
 
@@ -265,16 +276,15 @@ Examples:
 ```go
 import (
     ginlib "github.com/gin-gonic/gin"
-    ginadapter "github.com/aizacoders/openapigo/adapters/gin"
-    "github.com/aizacoders/openapigo/openapi/oas"
+    "github.com/aizacoders/openapigo/openapi"
+    "github.com/aizacoders/openapigo/adapters/ginadapter"
 )
 
 engine := ginlib.New()
-adapter := ginadapter.NewGinAdapters(engine)
-sr := simple.NewGin(adapter, mySpec)
-// register routes on sr ...
-ginadapter.Register(adapter, openapi.Config{Title: "My API", Version: "0.1.0"})
-adapter.Engine.Run(":8080")
+r := ginadapter.Wrap(engine)
+r.GET("/users", listUsers, ginadapter.Res([]User{}), ginadapter.Tags("Users"))
+r.Docs(openapi.Config{Title: "My API", Version: "0.1.0"})
+r.Engine.Run(":8080")
 ```
 
 - Echo
@@ -282,16 +292,15 @@ adapter.Engine.Run(":8080")
 ```go
 import (
     echolib "github.com/labstack/echo/v4"
-    echoadapter "github.com/aizacoders/openapigo/adapters/echo"
-    "github.com/aizacoders/openapigo/openapi/oas"
+    "github.com/aizacoders/openapigo/openapi"
+    "github.com/aizacoders/openapigo/adapters/echoadapter"
 )
 
 base := echolib.New()
-adapter := echoadapter.NewEchoAdapters(base)
-sr := simple.NewEcho(adapter, mySpec)
-// register routes on sr ...
-echoadapter.Register(adapter, openapi.Config{Title: "My API", Version: "0.1.0"})
-adapter.Echo.Start(":8080")
+r := echoadapter.Wrap(base)
+r.GET("/users", listUsers, echoadapter.Res([]User{}), echoadapter.Tags("Users"))
+r.Docs(openapi.Config{Title: "My API", Version: "0.1.0"})
+r.Echo.Start(":8080")
 ```
 
 - Fiber
@@ -299,20 +308,19 @@ adapter.Echo.Start(":8080")
 ```go
 import (
     fiberlib "github.com/gofiber/fiber/v2"
-    fiberadapter "github.com/aizacoders/openapigo/adapters/fiber"
-    "github.com/aizacoders/openapigo/openapi/oas"
+    "github.com/aizacoders/openapigo/openapi"
+    "github.com/aizacoders/openapigo/adapters/fiberadapter"
 )
 
 app := fiberlib.New()
-adapter := fiberadapter.NewFiberAdapters(app)
-sr := simple.NewFiber(adapter, mySpec)
-// register routes on sr ...
-fiberadapter.Register(adapter, openapi.Config{Title: "My API", Version: "0.1.0"})
-adapter.App.Listen(":8080")
+r := fiberadapter.Wrap(app)
+r.GET("/users", listUsers, fiberadapter.Res([]User{}), fiberadapter.Tags("Users"))
+r.Docs(openapi.Config{Title: "My API", Version: "0.1.0"})
+r.App.Listen(":8080")
 ```
 
 Notes:
-- The `New*Adapters` helpers let you keep your preferred engine/app initialization (e.g., `gin.Default()`), while still enabling OpenAPIGO to capture route metadata.
+- The `Wrap` helpers let you keep your preferred engine/app initialization (e.g., `gin.Default()`), while still enabling OpenAPIGO to capture route metadata.
 - If you previously built with `-tags`, adapters are now compiled by default — no need to use build tags to get adapter implementations.
 
 ---

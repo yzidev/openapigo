@@ -16,6 +16,11 @@ type Router = openapi.Router
 // automatically mount the created router on the mux under the root path "/",
 // so callers can call `base := httprouter.NewHttpAdapters(mux)` and skip `mux.Handle("/", r)`.
 func NewHttpAdapters(mux ...*http.ServeMux) *Router {
+	return New(mux...)
+}
+
+// New creates the default net/http OpenAPIGO router adapter.
+func New(mux ...*http.ServeMux) *Router {
 	r := openapi.NewRouter()
 	if len(mux) > 0 && mux[0] != nil {
 		mux[0].Handle("/", r)
@@ -33,6 +38,17 @@ var (
 	WithTags           = openapi.WithTags
 	WithResponses      = openapi.WithResponses
 	WithQueryParams    = openapi.WithQueryParams
+	Req                = openapi.Req
+	MultipartUpload    = openapi.MultipartUpload
+	Res                = openapi.Res
+	Tags               = openapi.Tags
+	Security           = openapi.Security
+	Query              = openapi.Query
+	Headers            = openapi.Headers
+	Status             = openapi.Status
+	Created            = openapi.Created
+	NoContent          = openapi.NoContent
+	Responses          = openapi.Responses
 	JSONRoute          = openapi.JSONRoute
 )
 

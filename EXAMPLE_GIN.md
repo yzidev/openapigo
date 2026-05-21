@@ -1,6 +1,6 @@
 # Gin example (OpenAPIGO)
 
-This repo uses a **config-first** style (SpringBoot-like): keep routes/handlers clean, and declare OpenAPI metadata in one place using `openapi/simple`.
+This example uses route-level OpenAPI options so routes, handlers, and docs stay in one place.
 
 ## Quick start
 
@@ -41,9 +41,8 @@ This section shows how to wire Gin with OpenAPIGO in your own project.
 ```go
 import (
     ginlib "github.com/gin-gonic/gin"
-    ginadapter "github.com/aizacoders/openapigo/adapters/gin"
+    ginadapter "github.com/aizacoders/openapigo/adapters/ginadapter"
     "github.com/aizacoders/openapigo/openapi"
-    "github.com/aizacoders/openapigo/openapi/oas"
 )
 ```
 
@@ -56,53 +55,49 @@ engine := ginlib.Default()      // or ginlib.New()
 3) Wrap the engine with the adapter so OpenAPIGO can capture route metadata
 
 ```go
-adapter := ginadapter.NewGinAdapters(engine)
+r := ginadapter.Wrap(engine)
 ```
 
-4) Build your Spec using the simple builder (grouping + tags)
+4) Register handlers with short OpenAPI options
 
 ```go
-b := simple.NewSpec()
-b.GroupTags("/", []string{"Users"}, func(s *simple.SpecBuilder) {
-    s.GET("/users").Res([]User{}).OK()
-    s.POST("/users").Req(CreateUser{}).Res(User{}).Created()
-    // Multipart upload
-    s.POST("/users/upload").MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}).Res(map[string]string{}).OK()
-    // Errors and extra responses
-    s.GET("/users/demo-errors").Res(map[string]string{}).OK().Responses(
+users := r.Group("", ginadapter.Tags("Users"))
+
+users.GET("/users", func(c *ginlib.Context) {
+    ginadapter.JSON(c, 200, []User{{ID: "1", Name: "Alice"}})
+}, ginadapter.Res([]User{}))
+
+users.POST("/users", createUser,
+    ginadapter.Req(CreateUser{}),
+    ginadapter.Res(User{}),
+    ginadapter.Created(),
+)
+
+users.POST("/users/upload", uploadUserFile,
+    ginadapter.MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}),
+    ginadapter.Res(map[string]string{}),
+)
+
+users.GET("/users/demo-errors", demoErrors,
+    ginadapter.Res(map[string]string{}),
+    ginadapter.Responses(
         openapi.ResponseSpec{Status: 400, Schema: openapi.ErrorResponse{}},
         openapi.ResponseSpec{Status: 401, Schema: openapi.ErrorResponse{}},
         openapi.ResponseSpec{Status: 500, Schema: openapi.ErrorResponse{}},
-    )
-})
-spec := b.Spec()
+    ),
+)
 ```
 
-5) Create the `simple` router that injects Spec defaults
+5) Mount OpenAPI JSON + Swagger UI and run
 
 ```go
-sr := simple.NewGin(adapter, spec)
+r.Docs(openapi.Config{Title: "User API", Version: "1.0.0"})
+r.Engine.Run(":8080")
 ```
 
-6) Register handlers using the clean API (methods only)
+6) Security (optional)
 
-```go
-sr.GET("/users", func(c *ginlib.Context) {
-    // use adapter helpers
-    ginadapter.JSON(c, 200, []User{{ID: "1", Name: "Alice"}})
-})
-```
-
-7) Mount OpenAPI JSON + Swagger UI and run
-
-```go
-adapter.Register(adapter, openapi.Config{Title: "User API", Version: "1.0.0"})
-adapter.Engine.Run(":8080")
-```
-
-8) Security (optional)
-
-- Define schemes in `openapi.Config.SecuritySchemes` and attach per-route via `RouteBuilder.Security`.
+- Define schemes in `openapi.Config.SecuritySchemes` and attach per-route via `ginadapter.Security(...)`.
 
 Example:
 
@@ -120,7 +115,7 @@ cfg := openapi.Config{Title: "API", Version: "1.0.0", SecuritySchemes: map[strin
 9) Troubleshooting
 
 - If you get type errors around constructors: make sure you import Gin framework (github.com/gin-gonic/gin) and the adapter package separately (use aliases to avoid name collisions: `ginlib` vs `ginadapter`).
-- If Swagger UI doesn't show request/response schemas: ensure you declared Req/Res in the Spec builder; `simple` injects those into routes.
+- If Swagger UI doesn't show request/response schemas: ensure you declared `Req`/`Res` on the route.
 
 ---
 
@@ -128,7 +123,7 @@ cfg := openapi.Config{Title: "API", Version: "1.0.0", SecuritySchemes: map[strin
 
 - `example/gin/main.go` — demonstrates wrapping an existing engine and registering OpenAPI
 - `example/gin/routes.go` — shows clean route declarations
-- `openapi/simple` — the spec builder API used to declare schemas and responses
+- `openapi/spec` — optional config-first builder for teams that prefer central route metadata
 
 ### Note about core router
 

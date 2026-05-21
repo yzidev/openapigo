@@ -3,11 +3,12 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/getkin/kin-openapi/openapi3"
 
 	"github.com/aizacoders/openapigo/adapters/ginadapter"
 	"github.com/aizacoders/openapigo/openapi"
-	"github.com/aizacoders/openapigo/openapi/oas"
 )
 
 func openAPICfgSecurity() (openapi.Config, *openapi3.SecurityRequirement, *openapi3.SecurityRequirement) {
@@ -28,25 +29,29 @@ func openAPICfgSecurity() (openapi.Config, *openapi3.SecurityRequirement, *opena
 	return cfg, &bearer, &apiKey
 }
 
-func registerSecureRoutes(r *oas.GinRouter, bearer, apiKey *openapi3.SecurityRequirement) {
-	b := oas.NewSpec()
-	b.GroupTags("", []string{"Secure Users"}, func(s *oas.SpecBuilder) {
-		s.GET("/secure/healthz").Security(bearer).Res(map[string]string{}).OK()
-		s.GET("/secure/users").Security(bearer).Res([]SecUser{}).OK()
-		s.POST("/secure/users").Security(apiKey).Res(struct{}{}).Created()
+func registerSecureRoutes(r *ginadapter.Router, bearer, apiKey *openapi3.SecurityRequirement) {
+	r.GET("/secure/healthz", handleSecureHealthz,
+		ginadapter.Tags("Secure Users"),
+		ginadapter.Security(bearer),
+		ginadapter.Res(map[string]string{}),
+	)
 
-		// Upload secure user file: multipart/form-data.
-		s.POST("/secure/users/upload").Security(apiKey).MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}).Res(map[string]string{}).OK()
-
-		s.GET("/secure/demo-errors").Security(bearer).Res(map[string]string{}).OK()
-	})
-	r.Spec = b.Spec()
-
-	r.GET("/secure/healthz", handleSecureHealthz)
-
-	secure := r.Group("", ginadapter.WithTags("Secure Users"))
-	secure.GET("/secure/users", handleSecureListUsers)
-	secure.POST("/secure/users", handleSecureCreateUser)
-	secure.POST("/secure/users/upload", handleSecureUploadUserFile)
-	secure.GET("/secure/demo-errors", handleSecureDemoErrors)
+	secure := r.Group("", ginadapter.Tags("Secure Users"))
+	secure.GET("/secure/users", handleSecureListUsers, ginadapter.Security(bearer), ginadapter.Res([]SecUser{}))
+	secure.POST("/secure/users", handleSecureCreateUser, ginadapter.Security(apiKey), ginadapter.Created())
+	secure.POST("/secure/users/upload", handleSecureUploadUserFile,
+		ginadapter.Security(apiKey),
+		ginadapter.MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}),
+		ginadapter.Res(map[string]string{}),
+	)
+	secure.GET("/secure/demo-errors", handleSecureDemoErrors,
+		ginadapter.Security(bearer),
+		ginadapter.Res(map[string]string{}),
+		ginadapter.Responses(
+			openapi.ResponseSpec{Status: http.StatusBadRequest, Schema: openapi.ErrorResponse{}},
+			openapi.ResponseSpec{Status: http.StatusUnauthorized, Schema: openapi.ErrorResponse{}},
+			openapi.ResponseSpec{Status: http.StatusInternalServerError, Schema: openapi.ErrorResponse{}},
+			openapi.ResponseSpec{Status: http.StatusServiceUnavailable, Schema: openapi.ErrorResponse{}},
+		),
+	)
 }

@@ -11,7 +11,6 @@ import (
 
 	"github.com/aizacoders/openapigo/adapters/fiberadapter"
 	"github.com/aizacoders/openapigo/openapi"
-	"github.com/aizacoders/openapigo/openapi/oas"
 )
 
 type SecUser struct {
@@ -34,22 +33,8 @@ func main() {
 	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
 	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
 
-	b := oas.NewSpec()
-	b.GroupTags("", []string{"Secure Users"}, func(s *oas.SpecBuilder) {
-		s.GET("/secure/users").Security(&bearer).Res([]SecUser{}).OK()
-		s.POST("/secure/users").Security(&apiKey).Res(struct{}{}).Created()
-
-		// Upload secure user file: multipart/form-data.
-		s.POST("/secure/users/upload").Security(&apiKey).MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}).Res(map[string]string{}).OK()
-
-		// Error showcase: helps Swagger UI show error schemas in security mode.
-		s.GET("/secure/demo-errors").Security(&bearer).Res(map[string]string{}).OK()
-	})
-
-	spec := b.Spec()
-
-	r := oas.NewFiberRouter(base, spec)
-	secure := r.Group("", fiberadapter.WithTags("Secure Users"))
+	r := base
+	secure := r.Group("", fiberadapter.Tags("Secure Users"))
 
 	secure.GET("/secure/users", func(c *fiberlib.Ctx) error {
 		auth := c.Get("Authorization")
@@ -57,14 +42,14 @@ func main() {
 			return c.SendStatus(http.StatusUnauthorized)
 		}
 		return fiberadapter.JSON(c, http.StatusOK, []SecUser{{ID: "1", Name: "Alice"}})
-	})
+	}, fiberadapter.Security(&bearer), fiberadapter.Res([]SecUser{}))
 
 	secure.POST("/secure/users", func(c *fiberlib.Ctx) error {
 		if c.Get("X-API-Key") == "" {
 			return c.SendStatus(http.StatusUnauthorized)
 		}
 		return c.SendStatus(http.StatusCreated)
-	})
+	}, fiberadapter.Security(&apiKey), fiberadapter.Created())
 
 	secure.POST("/secure/users/upload", func(c *fiberlib.Ctx) error {
 		if c.Get("X-API-Key") == "" {
@@ -76,7 +61,11 @@ func main() {
 		}
 		note := c.FormValue("note")
 		return fiberadapter.JSON(c, http.StatusOK, map[string]string{"filename": fh.Filename, "note": note})
-	})
+	},
+		fiberadapter.Security(&apiKey),
+		fiberadapter.MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}),
+		fiberadapter.Res(map[string]string{}),
+	)
 
 	secure.GET("/secure/demo-errors", func(c *fiberlib.Ctx) error {
 		if !strings.HasPrefix(c.Get("Authorization"), "Bearer ") {
@@ -92,8 +81,8 @@ func main() {
 		default:
 			return fiberadapter.JSON(c, http.StatusOK, map[string]string{"status": "ok"})
 		}
-	})
+	}, fiberadapter.Security(&bearer), fiberadapter.Res(map[string]string{}))
 
-	fiberadapter.Register(base, cfg)
-	_ = base.App.Listen(":8080")
+	r.Docs(cfg)
+	_ = r.App.Listen(":8080")
 }

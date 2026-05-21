@@ -16,13 +16,21 @@ type Router struct {
 	routes []openapi.RouteMeta
 }
 
-func New() *Router {
+func New(app ...*fiberlib.App) *Router {
+	if len(app) > 0 {
+		return Wrap(app[0])
+	}
 	return &Router{App: fiberlib.New()}
 }
 
 // NewFiberAdapters wraps an existing *fiber.App into the adapter Router so callers
 // who create their own app (e.g., fiber.New()) can still use the adapter.
 func NewFiberAdapters(app *fiberlib.App) *Router {
+	return Wrap(app)
+}
+
+// Wrap converts an existing Fiber app into an OpenAPIGO router adapter.
+func Wrap(app *fiberlib.App) *Router {
 	if app == nil {
 		app = fiberlib.New()
 	}
@@ -38,6 +46,17 @@ var (
 	WithTags           = openapi.WithTags
 	WithResponses      = openapi.WithResponses
 	WithQueryParams    = openapi.WithQueryParams
+	Req                = openapi.Req
+	MultipartUpload    = openapi.MultipartUpload
+	Res                = openapi.Res
+	Tags               = openapi.Tags
+	Security           = openapi.Security
+	Query              = openapi.Query
+	Headers            = openapi.Headers
+	Status             = openapi.Status
+	Created            = openapi.Created
+	NoContent          = openapi.NoContent
+	Responses          = openapi.Responses
 	JSONRoute          = openapi.JSONRoute
 )
 
@@ -74,6 +93,11 @@ func (r *Router) OPTIONS(path string, h fiberlib.Handler, opts ...HandlerOption)
 }
 
 func (r *Router) Routes() []openapi.RouteMeta { return r.routes }
+
+// Docs mounts the generated OpenAPI JSON document and Swagger UI.
+func (r *Router) Docs(cfg openapi.Config) {
+	Register(r, cfg)
+}
 
 func Register(r *Router, cfg openapi.Config) {
 	doc := openapi.BuildSpec(r.routes, cfg)

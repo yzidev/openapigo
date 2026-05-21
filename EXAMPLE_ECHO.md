@@ -1,6 +1,6 @@
 # Echo example (OpenAPIGO)
 
-This example shows the **config-first** (SpringBoot-like) way to use OpenAPIGO with Echo.
+This example uses route-level OpenAPI options so Echo routes stay direct and easy to scan.
 
 ## Quick start
 
@@ -39,9 +39,8 @@ OpenAPI JSON:
 ```go
 import (
     echolib "github.com/labstack/echo/v4"
-    echoadapter "github.com/aizacoders/openapigo/adapters/echo"
+    echoadapter "github.com/aizacoders/openapigo/adapters/echoadapter"
     "github.com/aizacoders/openapigo/openapi"
-    "github.com/aizacoders/openapigo/openapi/oas"
 )
 ```
 
@@ -49,42 +48,41 @@ import (
 
 ```go
 base := echolib.New()
-adapter := echoadapter.NewEchoAdapters(base)
+r := echoadapter.Wrap(base)
 ```
 
-3) Build Spec with `simple.NewSpec()` (group routes, define Req/Res and multipart)
+3) Register handlers with short OpenAPI options
 
 ```go
-b := simple.NewSpec()
-b.GroupTags("/", []string{"Users"}, func(s *simple.SpecBuilder) {
-    s.GET("/users").Res([]User{}).OK()
-    s.POST("/users").Req(CreateUser{}).Res(User{}).Created()
-})
-```
-
-4) Create the simple wrapper and register handlers
-
-```go
-sr := simple.NewEcho(adapter, b.Spec())
-users := sr.Group("", echoadapter.WithTags("Users"))
+users := r.Group("", echoadapter.Tags("Users"))
 users.GET("/users", func(c echolib.Context) error {
     return echoadapter.JSON(c, http.StatusOK, []User{{ID: "1", Name: "Alice"}})
-})
+}, echoadapter.Res([]User{}))
+
+users.POST("/users", createUser,
+    echoadapter.Req(CreateUser{}),
+    echoadapter.Res(User{}),
+    echoadapter.Created(),
+)
+
+users.POST("/users/upload", uploadUserFile,
+    echoadapter.MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}),
+    echoadapter.Res(map[string]string{}),
+)
 ```
 
-5) Mount OpenAPI and run
+4) Mount OpenAPI and run
 
 ```go
-adapter.Register(adapter, openapi.Config{Title: "User API", Version: "1.0.0"})
-adapter.Echo.Start(":8080")
+r.Docs(openapi.Config{Title: "User API", Version: "1.0.0"})
+r.Echo.Start(":8080")
 ```
 
-6) Notes
+5) Notes
 
-- `NewEchoAdapters` lets you create middleware and configure the Echo instance before wrapping it with the adapter.
-- Use `MultipartUpload` in the Spec builder to expose file upload inputs in Swagger UI.
+- `Wrap` lets you create middleware and configure the Echo instance before wrapping it with the adapter.
+- Use `echoadapter.MultipartUpload` to expose file upload inputs in Swagger UI.
 
 ### Note about core router
 
 The OpenAPIGO core router is a lightweight net/http-backed mux. Adapter packages (including Echo) integrate with this core behavior and continue to work as before. If you use the `httprouter` adapter you can optionally mount the router automatically onto a `*http.ServeMux` by calling `httprouter.New(mux)`.
-

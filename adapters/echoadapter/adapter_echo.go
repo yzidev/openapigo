@@ -16,13 +16,21 @@ type Router struct {
 	routes []openapi.RouteMeta
 }
 
-func New() *Router {
+func New(e ...*echolib.Echo) *Router {
+	if len(e) > 0 {
+		return Wrap(e[0])
+	}
 	return &Router{Echo: echolib.New()}
 }
 
 // NewEchoAdapters wraps an existing *echo.Echo into the adapter Router so callers
 // who create their own echo server (e.g., echo.New() or echo.Default()) can use the adapter.
 func NewEchoAdapters(e *echolib.Echo) *Router {
+	return Wrap(e)
+}
+
+// Wrap converts an existing Echo instance into an OpenAPIGO router adapter.
+func Wrap(e *echolib.Echo) *Router {
 	if e == nil {
 		e = echolib.New()
 	}
@@ -38,6 +46,17 @@ var (
 	WithTags           = openapi.WithTags
 	WithResponses      = openapi.WithResponses
 	WithQueryParams    = openapi.WithQueryParams
+	Req                = openapi.Req
+	MultipartUpload    = openapi.MultipartUpload
+	Res                = openapi.Res
+	Tags               = openapi.Tags
+	Security           = openapi.Security
+	Query              = openapi.Query
+	Headers            = openapi.Headers
+	Status             = openapi.Status
+	Created            = openapi.Created
+	NoContent          = openapi.NoContent
+	Responses          = openapi.Responses
 	JSONRoute          = openapi.JSONRoute
 )
 
@@ -74,6 +93,11 @@ func (r *Router) OPTIONS(path string, h echolib.HandlerFunc, opts ...HandlerOpti
 }
 
 func (r *Router) Routes() []openapi.RouteMeta { return r.routes }
+
+// Docs mounts the generated OpenAPI JSON document and Swagger UI.
+func (r *Router) Docs(cfg openapi.Config) {
+	Register(r, cfg)
+}
 
 func Register(r *Router, cfg openapi.Config) {
 	doc := openapi.BuildSpec(r.routes, cfg)

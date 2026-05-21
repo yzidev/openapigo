@@ -11,7 +11,6 @@ import (
 	echolib "github.com/labstack/echo/v4"
 
 	"github.com/aizacoders/openapigo/openapi"
-	"github.com/aizacoders/openapigo/openapi/oas"
 )
 
 type SecUser struct {
@@ -34,21 +33,8 @@ func main() {
 	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
 	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
 
-	b := oas.NewSpec()
-	b.GroupTags("", []string{"Secure Users"}, func(s *oas.SpecBuilder) {
-		s.GET("/secure/users").Security(&bearer).Res([]SecUser{}).OK()
-		s.POST("/secure/users").Security(&apiKey).Res(struct{}{}).Created()
-
-		// Upload secure user file: multipart/form-data.
-		s.POST("/secure/users/upload").Security(&apiKey).MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}).Res(map[string]string{}).OK()
-
-		s.GET("/secure/demo-errors").Security(&bearer).Res(map[string]string{}).OK()
-	})
-
-	spec := b.Spec()
-
-	r := oas.NewEchoRouter(base, spec)
-	secure := r.Group("", echoadapter.WithTags("Secure Users"))
+	r := base
+	secure := r.Group("", echoadapter.Tags("Secure Users"))
 
 	secure.GET("/secure/users", func(c echolib.Context) error {
 		auth := c.Request().Header.Get("Authorization")
@@ -56,14 +42,14 @@ func main() {
 			return c.NoContent(http.StatusUnauthorized)
 		}
 		return echoadapter.JSON(c, http.StatusOK, []SecUser{{ID: "1", Name: "Alice"}})
-	})
+	}, echoadapter.Security(&bearer), echoadapter.Res([]SecUser{}))
 
 	secure.POST("/secure/users", func(c echolib.Context) error {
 		if c.Request().Header.Get("X-API-Key") == "" {
 			return c.NoContent(http.StatusUnauthorized)
 		}
 		return c.NoContent(http.StatusCreated)
-	})
+	}, echoadapter.Security(&apiKey), echoadapter.Created())
 
 	secure.POST("/secure/users/upload", func(c echolib.Context) error {
 		if c.Request().Header.Get("X-API-Key") == "" {
@@ -75,7 +61,11 @@ func main() {
 		}
 		note := c.FormValue("note")
 		return echoadapter.JSON(c, http.StatusOK, map[string]string{"filename": f.Filename, "note": note})
-	})
+	},
+		echoadapter.Security(&apiKey),
+		echoadapter.MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}),
+		echoadapter.Res(map[string]string{}),
+	)
 
 	secure.GET("/secure/demo-errors", func(c echolib.Context) error {
 		auth := c.Request().Header.Get("Authorization")
@@ -92,8 +82,8 @@ func main() {
 		default:
 			return echoadapter.JSON(c, http.StatusOK, map[string]string{"status": "ok"})
 		}
-	})
+	}, echoadapter.Security(&bearer), echoadapter.Res(map[string]string{}))
 
-	echoadapter.Register(base, cfg)
-	_ = base.Echo.Start(":8080")
+	r.Docs(cfg)
+	_ = r.Echo.Start(":8080")
 }

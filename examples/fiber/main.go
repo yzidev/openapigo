@@ -10,7 +10,6 @@ import (
 
 	"github.com/aizacoders/openapigo/adapters/fiberadapter"
 	"github.com/aizacoders/openapigo/openapi"
-	"github.com/aizacoders/openapigo/openapi/oas"
 )
 
 type User struct {
@@ -32,40 +31,23 @@ type ErrorResponse struct {
 
 func main() {
 	base := fiberlib.New()
+	r := fiberadapter.Wrap(base)
 
-	b := oas.NewSpec()
-	b.GroupTags("", []string{"Users"}, func(s *oas.SpecBuilder) {
-		s.GET("/users").Res([]User{}).OK()
-		s.GET("/search").Query(
-			openapi.QueryParam{Name: "q", Type: openapi.ParamString, Required: true, Description: "Search term"},
-			openapi.QueryParam{Name: "limit", Type: openapi.ParamInteger, Required: false, Description: "Max results"},
-		).Res(struct{}{}).OK()
-		s.POST("/users").Req(CreateUser{}).Res(struct{}{}).Created()
-
-		// Upload user file: multipart/form-data.
-		s.POST("/users/upload").MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}).Res(map[string]string{}).OK()
-
-		s.GET("/users/:id").Res(User{}).OK()
-		s.PUT("/users/:id").Req(UpdateUser{}).Res(User{}).OK()
-		s.PATCH("/users/:id").Req(UpdateUser{}).Res(User{}).OK()
-		s.DELETE("/users/:id").Res(struct{}{}).NoContent()
-	})
-
-	spec := b.Spec()
-
-	// wrap existing fiber App into adapter
-	r := fiberadapter.NewFiberAdapters(base)
-	sr := oas.NewFiberRouter(r, spec)
-
-	users := sr.Group("", fiberadapter.WithTags("Users"))
+	users := r.Group("", fiberadapter.Tags("Users"))
 	users.GET("/users", func(c *fiberlib.Ctx) error {
 		return fiberadapter.JSON(c, http.StatusOK, []User{{ID: "1", Name: "Alice"}})
-	})
+	}, fiberadapter.Res([]User{}))
 
 	users.GET("/search", func(c *fiberlib.Ctx) error {
 		_ = c.Query("q")
 		return c.SendStatus(http.StatusOK)
-	})
+	},
+		fiberadapter.Query(
+			openapi.QueryParam{Name: "q", Type: openapi.ParamString, Required: true, Description: "Search term"},
+			openapi.QueryParam{Name: "limit", Type: openapi.ParamInteger, Required: false, Description: "Max results"},
+		),
+		fiberadapter.Res(struct{}{}),
+	)
 
 	users.POST("/users", func(c *fiberlib.Ctx) error {
 		var in CreateUser
@@ -74,7 +56,7 @@ func main() {
 			return nil
 		}
 		return c.SendStatus(http.StatusCreated)
-	})
+	}, fiberadapter.Req(CreateUser{}), fiberadapter.Created())
 
 	users.POST("/users/upload", func(c *fiberlib.Ctx) error {
 		fh, err := c.FormFile("file")
@@ -83,7 +65,10 @@ func main() {
 		}
 		note := c.FormValue("note")
 		return fiberadapter.JSON(c, http.StatusOK, map[string]string{"filename": fh.Filename, "note": note})
-	})
+	},
+		fiberadapter.MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}),
+		fiberadapter.Res(map[string]string{}),
+	)
 
 	users.GET("/users/:id", func(c *fiberlib.Ctx) error {
 		id := c.Params("id")
@@ -91,7 +76,7 @@ func main() {
 			return fiberadapter.JSON(c, http.StatusNotFound, ErrorResponse{Error: "user not found"})
 		}
 		return fiberadapter.JSON(c, http.StatusOK, User{ID: id, Name: "Alice"})
-	})
+	}, fiberadapter.Res(User{}))
 
 	users.PUT("/users/:id", func(c *fiberlib.Ctx) error {
 		id := c.Params("id")
@@ -105,7 +90,7 @@ func main() {
 			return nil
 		}
 		return fiberadapter.JSON(c, http.StatusOK, User{ID: id, Name: in.Name})
-	})
+	}, fiberadapter.Req(UpdateUser{}), fiberadapter.Res(User{}))
 
 	users.PATCH("/users/:id", func(c *fiberlib.Ctx) error {
 		id := c.Params("id")
@@ -119,7 +104,7 @@ func main() {
 			return nil
 		}
 		return fiberadapter.JSON(c, http.StatusOK, User{ID: id, Name: in.Name})
-	})
+	}, fiberadapter.Req(UpdateUser{}), fiberadapter.Res(User{}))
 
 	users.DELETE("/users/:id", func(c *fiberlib.Ctx) error {
 		id := c.Params("id")
@@ -128,9 +113,9 @@ func main() {
 			return nil
 		}
 		return c.SendStatus(http.StatusNoContent)
-	})
+	}, fiberadapter.NoContent())
 
-	fiberadapter.Register(r, openapi.Config{
+	r.Docs(openapi.Config{
 		Title:   "User API",
 		Version: "1.0.0",
 		Tags:    openapi3.Tags{{Name: "Users", Description: "User management endpoints"}},

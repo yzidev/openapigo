@@ -75,6 +75,38 @@ func TestRegisterAndSpec(t *testing.T) {
 	}
 }
 
+func TestNewDocsAndShortOptions(t *testing.T) {
+	r := New(Config{Title: "Short API", Version: "1.0.0"})
+
+	r.GET("/users", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}, Res([]tUser{}), Tags("Users"))
+	r.Docs()
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/openapi.json", nil)
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	var doc openapi3.T
+	if err := json.Unmarshal(rec.Body.Bytes(), &doc); err != nil {
+		t.Fatalf("invalid json: %v", err)
+	}
+	if doc.Info == nil || doc.Info.Title != "Short API" {
+		t.Fatalf("unexpected info: %+v", doc.Info)
+	}
+	p := doc.Paths.Find("/users")
+	if p == nil || p.Get == nil {
+		t.Fatalf("expected GET /users")
+	}
+	if len(p.Get.Tags) != 1 || p.Get.Tags[0] != "Users" {
+		t.Fatalf("expected Users tag, got %#v", p.Get.Tags)
+	}
+}
+
 func TestPathValue(t *testing.T) {
 	r := NewRouter()
 	r.GET("/users/{id}", func(w http.ResponseWriter, req *http.Request) {
@@ -279,6 +311,29 @@ func TestResponsesMultipleStatusCodes(t *testing.T) {
 	}
 	if p.Post.Responses.Value("500") == nil {
 		t.Fatalf("expected 500 response")
+	}
+}
+
+func TestExplicitSuccessStatusDoesNotAddDefault200(t *testing.T) {
+	type User struct {
+		ID string `json:"id"`
+	}
+
+	r := NewRouter()
+	r.POST("/users", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+	}, Res(User{}), Created())
+
+	doc := BuildSpec(r.Routes(), Config{Title: "T", Version: "1"})
+	p := doc.Paths.Find("/users")
+	if p == nil || p.Post == nil {
+		t.Fatalf("expected POST /users")
+	}
+	if p.Post.Responses.Value("201") == nil {
+		t.Fatalf("expected 201 response")
+	}
+	if p.Post.Responses.Value("200") != nil {
+		t.Fatalf("did not expect default 200 when 201 is declared")
 	}
 }
 

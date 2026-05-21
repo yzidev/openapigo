@@ -1,6 +1,6 @@
 # Fiber example (OpenAPIGO)
 
-Fiber example uses the same config-first style with `openapi/simple`.
+Fiber example uses route-level OpenAPI options for the shortest setup.
 
 ## Quick start
 
@@ -39,9 +39,8 @@ OpenAPI JSON:
 ```go
 import (
     fiberlib "github.com/gofiber/fiber/v2"
-    fiberadapter "github.com/aizacoders/openapigo/adapters/fiber"
+    fiberadapter "github.com/aizacoders/openapigo/adapters/fiberadapter"
     "github.com/aizacoders/openapigo/openapi"
-    "github.com/aizacoders/openapigo/openapi/oas"
 )
 ```
 
@@ -49,40 +48,40 @@ import (
 
 ```go
 app := fiberlib.New()
-adapter := fiberadapter.NewFiberAdapters(app)
+r := fiberadapter.Wrap(app)
 ```
 
-3) Build Spec with `simple.NewSpec()`
+3) Register handlers with short OpenAPI options
 
 ```go
-b := simple.NewSpec()
-b.GroupTags("/", []string{"Users"}, func(s *simple.SpecBuilder) {
-    s.GET("/users").Res([]User{}).OK()
-    s.POST("/users").Req(CreateUser{}).Res(User{}).Created()
-})
-```
-
-4) Create simple wrapper and register handlers
-
-```go
-sr := simple.NewFiber(adapter, b.Spec())
-users := sr.Group("", fiberadapter.WithTags("Users"))
+users := r.Group("", fiberadapter.Tags("Users"))
 users.GET("/users", func(c *fiberlib.Ctx) error {
     return fiberadapter.JSON(c, http.StatusOK, []User{{ID: "1", Name: "Alice"}})
-})
+}, fiberadapter.Res([]User{}))
+
+users.POST("/users", createUser,
+    fiberadapter.Req(CreateUser{}),
+    fiberadapter.Res(User{}),
+    fiberadapter.Created(),
+)
+
+users.POST("/users/upload", uploadUserFile,
+    fiberadapter.MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}),
+    fiberadapter.Res(map[string]string{}),
+)
 ```
 
-5) Mount OpenAPI and run
+4) Mount OpenAPI and run
 
 ```go
-adapter.Register(adapter, openapi.Config{Title: "User API", Version: "1.0.0"})
-adapter.App.Listen(":8080")
+r.Docs(openapi.Config{Title: "User API", Version: "1.0.0"})
+r.App.Listen(":8080")
 ```
 
-6) Notes
+5) Notes
 
-- `NewFiberAdapters` lets you configure middleware and settings on the Fiber app before wrapping it with the adapter.
-- Use `MultipartUpload` in the Spec builder to expose file upload in Swagger UI.
+- `Wrap` lets you configure middleware and settings on the Fiber app before wrapping it with the adapter.
+- Use `fiberadapter.MultipartUpload` to expose file upload in Swagger UI.
 
 ### Note about core router
 

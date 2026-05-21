@@ -15,6 +15,9 @@ const (
 	pathParamsKey contextKey = iota
 )
 
+// SecurityRequirement is re-exported for convenient route-level security options.
+type SecurityRequirement = openapi3.SecurityRequirement
+
 func PathValue(r *http.Request, key string) string {
 	if p, ok := r.Context().Value(pathParamsKey).(map[string]string); ok {
 		return p[key]

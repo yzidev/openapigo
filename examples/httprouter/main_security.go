@@ -10,7 +10,6 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 
 	"github.com/aizacoders/openapigo/openapi"
-	"github.com/aizacoders/openapigo/openapi/oas"
 )
 
 type SecUser struct {
@@ -19,8 +18,6 @@ type SecUser struct {
 }
 
 func main() {
-	base := openapi.NewRouter()
-
 	cfg := openapi.Config{
 		Title:   "User API (Security)",
 		Version: "1.0.0",
@@ -36,23 +33,9 @@ func main() {
 	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
 	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
 
-	b := oas.NewSpec()
-	b.GroupTags("", []string{"Secure Users"}, func(s *oas.SpecBuilder) {
-		s.GET("/secure/users").Security(&bearer).Res([]SecUser{}).OK()
-		s.POST("/secure/users").Security(&apiKey).Res(struct{}{}).Created()
+	r := openapi.New(cfg)
+	secure := r.Group("", openapi.Tags("Secure Users"))
 
-		// Upload secure user file: multipart/form-data.
-		s.POST("/secure/users/upload").Security(&apiKey).MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}).Res(map[string]string{}).OK()
-
-		s.GET("/secure/demo-errors").Security(&bearer).Res(map[string]string{}).OK()
-	})
-
-	spec := b.Spec()
-
-	r := oas.NewHttpRouter(base, spec)
-	secure := r.Group("", openapi.WithTags("Secure Users"))
-
-	// Bearer-protected endpoint
 	secure.GET("/secure/users", func(w http.ResponseWriter, req *http.Request) {
 		auth := req.Header.Get("Authorization")
 		if !strings.HasPrefix(auth, "Bearer ") {
@@ -60,16 +43,15 @@ func main() {
 			return
 		}
 		_ = json.NewEncoder(w).Encode([]SecUser{{ID: "1", Name: "Alice"}})
-	})
+	}, openapi.Security(&bearer), openapi.Res([]SecUser{}))
 
-	// API-key-protected endpoint
 	secure.POST("/secure/users", func(w http.ResponseWriter, req *http.Request) {
 		if req.Header.Get("X-API-Key") == "" {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
-	})
+	}, openapi.Security(&apiKey), openapi.Res(struct{}{}), openapi.Created())
 
 	secure.POST("/secure/users/upload", func(w http.ResponseWriter, req *http.Request) {
 		if req.Header.Get("X-API-Key") == "" {
@@ -88,7 +70,11 @@ func main() {
 		_ = f.Close()
 		note := req.FormValue("note")
 		openapi.JSON(w, http.StatusOK, map[string]string{"filename": fh.Filename, "note": note})
-	})
+	},
+		openapi.Security(&apiKey),
+		openapi.MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}),
+		openapi.Res(map[string]string{}),
+	)
 
 	secure.GET("/secure/demo-errors", func(w http.ResponseWriter, req *http.Request) {
 		auth := req.Header.Get("Authorization")
@@ -109,8 +95,8 @@ func main() {
 		default:
 			openapi.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
 		}
-	})
+	}, openapi.Security(&bearer), openapi.Res(map[string]string{}))
 
-	openapi.Register(base, cfg)
+	r.Docs()
 	_ = http.ListenAndServe(":8080", r)
 }
