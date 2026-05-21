@@ -7,8 +7,8 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 
-	"github.com/aizacoders/openapigo/adapters/ginadapter"
-	"github.com/aizacoders/openapigo/openapi"
+	"github.com/yzidev/openapigo/adapters/ginadapter"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 // registerRoutes wires the endpoints in a readable and grouped way.

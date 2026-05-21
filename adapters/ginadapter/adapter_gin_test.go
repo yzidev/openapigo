@@ -3,7 +3,7 @@ package ginadapter
 import (
 	"testing"
 
-	"github.com/aizacoders/openapigo/openapi"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 func TestGinNewAndWrap(t *testing.T) {

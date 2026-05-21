@@ -1,6 +1,6 @@
 # Openapigo 
 
-[![CI](https://github.com/aizacoders/openapigo/actions/workflows/ci.yml/badge.svg)](https://github.com/aizacoders/openapigo/actions/workflows/ci.yml)
+[![CI](https://github.com/yzidev/openapigo/actions/workflows/ci.yml/badge.svg)](https://github.com/yzidev/openapigo/actions/workflows/ci.yml)
 
 Auto-generate **OpenAPI 3.x** from your Go route registrations.
 
@@ -63,7 +63,7 @@ Use `MultipartUpload(...)` to get `multipart/form-data` request bodies and a fil
 ## Installation
 
 ```bash
-go get github.com/aizacoders/openapigo@latest
+go get github.com/yzidev/openapigo@latest
 ```
 
 ---
@@ -76,7 +76,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/aizacoders/openapigo/openapi"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 type User struct {
@@ -194,7 +194,7 @@ Notes:
 - Adapters are provided as packages under `adapters/*` so you can use them when needed.
   They are compiled by default and no special build tags are required to use them.
   If you prefer to keep adapter dependencies optional for your project, consider
-  shipping adapters as separate modules (e.g. `github.com/aizacoders/openapigo-adapter-gin`) so downstream projects opt-in.
+  shipping adapters as separate modules (e.g. `github.com/yzidev/openapigo-adapter-gin`) so downstream projects opt-in.
 
 ---
 
@@ -276,8 +276,8 @@ Examples:
 ```go
 import (
     ginlib "github.com/gin-gonic/gin"
-    "github.com/aizacoders/openapigo/openapi"
-    "github.com/aizacoders/openapigo/adapters/ginadapter"
+    "github.com/yzidev/openapigo/openapi"
+    "github.com/yzidev/openapigo/adapters/ginadapter"
 )
 
 engine := ginlib.New()
@@ -292,8 +292,8 @@ r.Engine.Run(":8080")
 ```go
 import (
     echolib "github.com/labstack/echo/v4"
-    "github.com/aizacoders/openapigo/openapi"
-    "github.com/aizacoders/openapigo/adapters/echoadapter"
+    "github.com/yzidev/openapigo/openapi"
+    "github.com/yzidev/openapigo/adapters/echoadapter"
 )
 
 base := echolib.New()
@@ -308,8 +308,8 @@ r.Echo.Start(":8080")
 ```go
 import (
     fiberlib "github.com/gofiber/fiber/v2"
-    "github.com/aizacoders/openapigo/openapi"
-    "github.com/aizacoders/openapigo/adapters/fiberadapter"
+    "github.com/yzidev/openapigo/openapi"
+    "github.com/yzidev/openapigo/adapters/fiberadapter"
 )
 
 app := fiberlib.New()

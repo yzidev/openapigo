@@ -3,7 +3,7 @@ package fiberadapter
 import (
 	"testing"
 
-	"github.com/aizacoders/openapigo/openapi"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 func TestFiberNewAndWrap(t *testing.T) {

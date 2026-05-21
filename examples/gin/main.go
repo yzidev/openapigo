@@ -3,8 +3,8 @@
 package main
 
 import (
-	"github.com/aizacoders/openapigo/adapters/ginadapter"
 	ginlib "github.com/gin-gonic/gin"
+	"github.com/yzidev/openapigo/adapters/ginadapter"
 )
 
 type User struct {

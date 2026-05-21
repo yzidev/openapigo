@@ -41,8 +41,8 @@ This section shows how to wire Gin with OpenAPIGO in your own project.
 ```go
 import (
     ginlib "github.com/gin-gonic/gin"
-    ginadapter "github.com/aizacoders/openapigo/adapters/ginadapter"
-    "github.com/aizacoders/openapigo/openapi"
+    ginadapter "github.com/yzidev/openapigo/adapters/ginadapter"
+    "github.com/yzidev/openapigo/openapi"
 )
 ```
 

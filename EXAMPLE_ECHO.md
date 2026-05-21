@@ -39,8 +39,8 @@ OpenAPI JSON:
 ```go
 import (
     echolib "github.com/labstack/echo/v4"
-    echoadapter "github.com/aizacoders/openapigo/adapters/echoadapter"
-    "github.com/aizacoders/openapigo/openapi"
+    echoadapter "github.com/yzidev/openapigo/adapters/echoadapter"
+    "github.com/yzidev/openapigo/openapi"
 )
 ```
 

@@ -3,7 +3,7 @@ package echoadapter
 import (
 	"testing"
 
-	"github.com/aizacoders/openapigo/openapi"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 func TestEchoNewAndWrap(t *testing.T) {

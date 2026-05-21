@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/aizacoders/openapigo/openapi"
 	ginlib "github.com/gin-gonic/gin"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 func requireBearer(c *ginlib.Context) bool {

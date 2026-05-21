@@ -5,11 +5,11 @@ package main
 import (
 	"net/http"
 
-	"github.com/aizacoders/openapigo/adapters/echoadapter"
 	"github.com/getkin/kin-openapi/openapi3"
 	echolib "github.com/labstack/echo/v4"
+	"github.com/yzidev/openapigo/adapters/echoadapter"
 
-	"github.com/aizacoders/openapigo/openapi"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 type User struct {

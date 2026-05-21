@@ -6,9 +6,9 @@ import (
 
 	echolib "github.com/labstack/echo/v4"
 
-	"github.com/aizacoders/openapigo/openapi"
-	"github.com/aizacoders/openapigo/openapi/ui"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/yzidev/openapigo/openapi"
+	"github.com/yzidev/openapigo/openapi/ui"
 )
 
 type Router struct {

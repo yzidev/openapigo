@@ -9,8 +9,8 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	fiberlib "github.com/gofiber/fiber/v2"
 
-	"github.com/aizacoders/openapigo/adapters/fiberadapter"
-	"github.com/aizacoders/openapigo/openapi"
+	"github.com/yzidev/openapigo/adapters/fiberadapter"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 type SecUser struct {

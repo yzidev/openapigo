@@ -3,7 +3,7 @@ package muxadapter
 import (
 	"testing"
 
-	"github.com/aizacoders/openapigo/openapi"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 func TestHTTPRouterNew(t *testing.T) {

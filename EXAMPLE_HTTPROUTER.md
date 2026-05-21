@@ -34,8 +34,8 @@ This section shows how to wire the default HTTP router with OpenAPIGO in your pr
 import (
     "net/http"
 
-    "github.com/aizacoders/openapigo/adapters/muxadapter"
-    "github.com/aizacoders/openapigo/openapi"
+    "github.com/yzidev/openapigo/adapters/muxadapter"
+    "github.com/yzidev/openapigo/openapi"
 )
 ```
 

@@ -7,9 +7,9 @@ import (
 
 	ginlib "github.com/gin-gonic/gin"
 
-	"github.com/aizacoders/openapigo/openapi"
-	"github.com/aizacoders/openapigo/openapi/ui"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/yzidev/openapigo/openapi"
+	"github.com/yzidev/openapigo/openapi/ui"
 )
 
 // Router wraps gin.Engine and captures route metadata for OpenAPI generation.

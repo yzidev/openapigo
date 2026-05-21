@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/aizacoders/openapigo/adapters/echoadapter"
-	"github.com/aizacoders/openapigo/openapi"
 	echolib "github.com/labstack/echo/v4"
+	"github.com/yzidev/openapigo/adapters/echoadapter"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 // EchoRouter wraps the echo adapter Router and injects options from Spec automatically.

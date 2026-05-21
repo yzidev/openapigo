@@ -1,4 +1,4 @@
-module github.com/aizacoders/openapigo
+module github.com/yzidev/openapigo
 
 go 1.25.5
 

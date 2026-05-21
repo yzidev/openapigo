@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aizacoders/openapigo/adapters/ginadapter"
-	"github.com/aizacoders/openapigo/openapi"
 	"github.com/getkin/kin-openapi/openapi3"
 	ginlib "github.com/gin-gonic/gin"
+	"github.com/yzidev/openapigo/adapters/ginadapter"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 type errSchemaDefaults struct {

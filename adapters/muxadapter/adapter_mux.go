@@ -3,7 +3,7 @@ package muxadapter
 import (
 	"net/http"
 
-	"github.com/aizacoders/openapigo/openapi"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 // Router is the default net/http router implementation.

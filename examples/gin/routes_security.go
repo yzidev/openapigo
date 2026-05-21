@@ -7,8 +7,8 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 
-	"github.com/aizacoders/openapigo/adapters/ginadapter"
-	"github.com/aizacoders/openapigo/openapi"
+	"github.com/yzidev/openapigo/adapters/ginadapter"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 func openAPICfgSecurity() (openapi.Config, *openapi3.SecurityRequirement, *openapi3.SecurityRequirement) {

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aizacoders/openapigo/openapi/infer"
+	"github.com/yzidev/openapigo/openapi/infer"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )

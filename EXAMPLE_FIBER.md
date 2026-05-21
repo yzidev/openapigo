@@ -39,8 +39,8 @@ OpenAPI JSON:
 ```go
 import (
     fiberlib "github.com/gofiber/fiber/v2"
-    fiberadapter "github.com/aizacoders/openapigo/adapters/fiberadapter"
-    "github.com/aizacoders/openapigo/openapi"
+    fiberadapter "github.com/yzidev/openapigo/adapters/fiberadapter"
+    "github.com/yzidev/openapigo/openapi"
 )
 ```
 

@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/aizacoders/openapigo/adapters/muxadapter"
-	"github.com/aizacoders/openapigo/openapi"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/yzidev/openapigo/adapters/muxadapter"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 type User struct {

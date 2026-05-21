@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aizacoders/openapigo/openapi"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 func TestMultipartUploadHelperProducesMultipartFormData(t *testing.T) {

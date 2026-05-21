@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/aizacoders/openapigo/adapters/ginadapter"
-	"github.com/aizacoders/openapigo/openapi"
 	ginlib "github.com/gin-gonic/gin"
+	"github.com/yzidev/openapigo/adapters/ginadapter"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 // GinRouter wraps the gin adapter Router and injects options from Spec automatically.

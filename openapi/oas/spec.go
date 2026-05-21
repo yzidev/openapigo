@@ -3,8 +3,8 @@ package oas
 import (
 	"strings"
 
-	"github.com/aizacoders/openapigo/openapi"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 // RouteDef is a config-only description of an endpoint.

@@ -3,7 +3,7 @@
 package main
 
 import (
-	"github.com/aizacoders/openapigo/adapters/ginadapter"
+	"github.com/yzidev/openapigo/adapters/ginadapter"
 )
 
 type SecUser struct {

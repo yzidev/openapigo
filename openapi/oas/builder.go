@@ -5,8 +5,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/aizacoders/openapigo/openapi"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 // Builder helps you build a Spec without manually typing keys like "GET /users/:id".

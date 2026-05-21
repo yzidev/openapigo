@@ -3,7 +3,7 @@ package oas
 import (
 	"net/http"
 
-	"github.com/aizacoders/openapigo/openapi"
+	"github.com/yzidev/openapigo/openapi"
 )
 
 // Router wraps an openapi.Router and injects options from Spec automatically.
