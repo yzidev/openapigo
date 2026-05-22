@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/yzidev/goas"
 	"github.com/yzidev/goas/adapters/muxadapter"
-	"github.com/yzidev/goas/openapi"
 )
 
 type User struct {
@@ -36,13 +36,13 @@ func listUsers(w http.ResponseWriter, _ *http.Request) {
 }
 
 func searchUsers(w http.ResponseWriter, req *http.Request) {
-	_, _, _ = openapi.QueryValue[int](req, "limit")
+	_, _, _ = goas.QueryValue[int](req, "limit")
 	w.WriteHeader(http.StatusOK)
 }
 
 func createUser(w http.ResponseWriter, req *http.Request) {
 	var in CreateUser
-	if err := openapi.Bind(req, &in); err != nil || in.Name == "" {
+	if err := goas.Bind(req, &in); err != nil || in.Name == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(ErrorResponse{Error: "invalid body"})
@@ -76,7 +76,7 @@ func uploadUserFile(w http.ResponseWriter, req *http.Request) {
 }
 
 func getUser(w http.ResponseWriter, req *http.Request) {
-	id := openapi.PathValue(req, "id")
+	id := goas.PathValue(req, "id")
 	if id == "404" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
@@ -89,9 +89,9 @@ func getUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func putUser(w http.ResponseWriter, req *http.Request) {
-	id := openapi.PathValue(req, "id")
+	id := goas.PathValue(req, "id")
 	var in UpdateUser
-	if err := openapi.Bind(req, &in); err != nil {
+	if err := goas.Bind(req, &in); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(ErrorResponse{Error: "invalid body"})
@@ -109,9 +109,9 @@ func putUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func patchUser(w http.ResponseWriter, req *http.Request) {
-	id := openapi.PathValue(req, "id")
+	id := goas.PathValue(req, "id")
 	var in UpdateUser
-	if err := openapi.Bind(req, &in); err != nil {
+	if err := goas.Bind(req, &in); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(ErrorResponse{Error: "invalid body"})
@@ -129,7 +129,7 @@ func patchUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func deleteUser(w http.ResponseWriter, req *http.Request) {
-	id := openapi.PathValue(req, "id")
+	id := goas.PathValue(req, "id")
 	if id == "404" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
@@ -148,7 +148,7 @@ func api2Hello(w http.ResponseWriter, _ *http.Request) {
 
 func api2CreateUser(w http.ResponseWriter, req *http.Request) {
 	var in CreateUser
-	if err := openapi.Bind(req, &in); err != nil || in.Name == "" {
+	if err := goas.Bind(req, &in); err != nil || in.Name == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(ErrorResponse{Error: "invalid body"})
@@ -161,7 +161,7 @@ func api2CreateUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func api2GetUser(w http.ResponseWriter, req *http.Request) {
-	id := openapi.PathValue(req, "id")
+	id := goas.PathValue(req, "id")
 	if id == "404" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
@@ -176,7 +176,7 @@ func api2GetUser(w http.ResponseWriter, req *http.Request) {
 func main() {
 	mux := http.NewServeMux()
 
-	r := muxadapter.Mount(mux, openapi.Config{
+	r := muxadapter.Mount(mux, goas.Config{
 		Title:   "User API",
 		Version: "1.0.0",
 		Tags: openapi3.Tags{
@@ -184,29 +184,29 @@ func main() {
 		},
 	})
 
-	users := r.Group("/api/v1.0", openapi.Tags("Users"))
-	users.GET("/users", listUsers, openapi.Res([]User{}))
+	users := r.Group("/api/v1.0", goas.Tags("Users"))
+	users.GET("/users", listUsers, goas.Res([]User{}))
 	users.GET("/search", searchUsers,
-		openapi.Query(
-			openapi.QueryParam{Name: "q", Type: openapi.ParamString, Required: true, Description: "Search term"},
-			openapi.QueryParam{Name: "limit", Type: openapi.ParamInteger, Required: false, Description: "Max results"},
+		goas.Query(
+			goas.QueryParam{Name: "q", Type: goas.ParamString, Required: true, Description: "Search term"},
+			goas.QueryParam{Name: "limit", Type: goas.ParamInteger, Required: false, Description: "Max results"},
 		),
-		openapi.Res(struct{}{}),
+		goas.Res(struct{}{}),
 	)
-	users.POST("/users", createUser, openapi.Req(CreateUser{}), openapi.Res(User{}), openapi.Created())
+	users.POST("/users", createUser, goas.Req(CreateUser{}), goas.Res(User{}), goas.Created())
 	users.POST("/users/upload", uploadUserFile,
-		openapi.MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}),
-		openapi.Res(map[string]string{}),
+		goas.MultipartUpload("file", goas.MultipartField{Name: "note", Type: goas.ParamString}),
+		goas.Res(map[string]string{}),
 	)
-	users.GET("/users/{id}", getUser, openapi.Res(User{}))
-	users.PUT("/users/{id}", putUser, openapi.Req(UpdateUser{}), openapi.Res(User{}))
-	users.PATCH("/users/{id}", patchUser, openapi.Req(UpdateUser{}), openapi.Res(User{}))
-	users.DELETE("/users/{id}", deleteUser, openapi.NoContent())
+	users.GET("/users/{id}", getUser, goas.Res(User{}))
+	users.PUT("/users/{id}", putUser, goas.Req(UpdateUser{}), goas.Res(User{}))
+	users.PATCH("/users/{id}", patchUser, goas.Req(UpdateUser{}), goas.Res(User{}))
+	users.DELETE("/users/{id}", deleteUser, goas.NoContent())
 
-	api2 := r.Group("/api/v2.0", openapi.Tags("Users V2.0"))
-	api2.GET("/hello", api2Hello, openapi.Res(map[string]string{}))
-	api2.POST("/users", api2CreateUser, openapi.Req(CreateUser{}), openapi.Res(User{}), openapi.Created())
-	api2.GET("/users/{id}", api2GetUser, openapi.Res(User{}))
+	api2 := r.Group("/api/v2.0", goas.Tags("Users V2.0"))
+	api2.GET("/hello", api2Hello, goas.Res(map[string]string{}))
+	api2.POST("/users", api2CreateUser, goas.Req(CreateUser{}), goas.Res(User{}), goas.Created())
+	api2.GET("/users/{id}", api2GetUser, goas.Res(User{}))
 
 	_ = http.ListenAndServe(":8080", mux)
 }

@@ -42,7 +42,7 @@ This section shows how to wire Gin with Goas in your own project.
 import (
     ginlib "github.com/gin-gonic/gin"
     ginadapter "github.com/yzidev/goas/adapters/ginadapter"
-    "github.com/yzidev/goas/openapi"
+    "github.com/yzidev/goas"
 )
 ```
 
@@ -69,7 +69,7 @@ users.GET("/users/demo-errors", demoErrors)
 4) Mount OpenAPI JSON + Swagger UI and run
 
 ```go
-ginadapter.Docs(engine, openapi.Config{Title: "User API", Version: "1.0.0"})
+ginadapter.Docs(engine, goas.Config{Title: "User API", Version: "1.0.0"})
 engine.Run(":8080")
 ```
 
@@ -86,14 +86,14 @@ r.POST("/users", createUser,
 
 6) Security (optional)
 
-- Define schemes in `openapi.Config.SecuritySchemes` and attach per-route via `ginadapter.Security(...)`.
+- Define schemes in `goas.Config.SecuritySchemes` and attach per-route via `ginadapter.Security(...)`.
 
 Example:
 
 ```go
 bearer := &openapi3.SecurityScheme{Type: "http", Scheme: "bearer", BearerFormat: "JWT"}
 apiKey := &openapi3.SecurityScheme{Type: "apiKey", In: "header", Name: "X-API-Key"}
-cfg := openapi.Config{Title: "API", Version: "1.0.0", SecuritySchemes: map[string]*openapi3.SecuritySchemeRef{
+cfg := goas.Config{Title: "API", Version: "1.0.0", SecuritySchemes: map[string]*openapi3.SecuritySchemeRef{
     "bearer": {Value: bearer},
     "xapikey": {Value: apiKey},
 }}
@@ -113,7 +113,7 @@ cfg.Security = openapi3.SecurityRequirements{bearerReq}
 
 - `examples/gin/main.go` — demonstrates native Gin routes with one docs call
 - `examples/gin/routes.go` — shows clean route declarations
-- `openapi/spec` — optional config-first builder for teams that prefer central route metadata
+- `spec` — optional config-first builder for teams that prefer central route metadata
 
 ### Note about core router
 

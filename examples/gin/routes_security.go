@@ -6,14 +6,14 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	ginlib "github.com/gin-gonic/gin"
 
-	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas"
 )
 
-func openAPICfgSecurity() openapi.Config {
+func openAPICfgSecurity() goas.Config {
 	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
 	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
 
-	return openapi.Config{
+	return goas.Config{
 		Title:       "User API (Gin + Security)",
 		Version:     "1.0.0",
 		Description: "An examples API with secured endpoints using Gin and Goas",

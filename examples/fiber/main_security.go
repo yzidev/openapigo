@@ -9,8 +9,8 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	fiberlib "github.com/gofiber/fiber/v2"
 
+	"github.com/yzidev/goas"
 	"github.com/yzidev/goas/adapters/fiberadapter"
-	"github.com/yzidev/goas/openapi"
 )
 
 type SecUser struct {
@@ -23,7 +23,7 @@ func main() {
 	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
 	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
 
-	cfg := openapi.Config{
+	cfg := goas.Config{
 		Title:   "User API (Fiber + Security)",
 		Version: "1.0.0",
 		SecuritySchemes: map[string]*openapi3.SecuritySchemeRef{
@@ -52,11 +52,11 @@ func main() {
 
 	secure.Post("/secure/users/upload", func(c *fiberlib.Ctx) error {
 		if c.Get("X-API-Key") == "" {
-			return fiberadapter.JSON(c, http.StatusUnauthorized, openapi.ErrorResponse{Error: "unauthorized"})
+			return fiberadapter.JSON(c, http.StatusUnauthorized, goas.ErrorResponse{Error: "unauthorized"})
 		}
 		fh, err := c.FormFile("file")
 		if err != nil {
-			return fiberadapter.JSON(c, http.StatusBadRequest, openapi.ErrorResponse{Error: "missing file"})
+			return fiberadapter.JSON(c, http.StatusBadRequest, goas.ErrorResponse{Error: "missing file"})
 		}
 		note := c.FormValue("note")
 		return fiberadapter.JSON(c, http.StatusOK, map[string]string{"filename": fh.Filename, "note": note})
@@ -68,11 +68,11 @@ func main() {
 		}
 		switch c.Query("code") {
 		case "400":
-			return fiberadapter.JSON(c, http.StatusBadRequest, openapi.ErrorResponse{Error: "bad request"})
+			return fiberadapter.JSON(c, http.StatusBadRequest, goas.ErrorResponse{Error: "bad request"})
 		case "500":
-			return fiberadapter.JSON(c, http.StatusInternalServerError, openapi.ErrorResponse{Error: "internal error"})
+			return fiberadapter.JSON(c, http.StatusInternalServerError, goas.ErrorResponse{Error: "internal error"})
 		case "503":
-			return fiberadapter.JSON(c, http.StatusServiceUnavailable, openapi.ErrorResponse{Error: "service unavailable"})
+			return fiberadapter.JSON(c, http.StatusServiceUnavailable, goas.ErrorResponse{Error: "service unavailable"})
 		default:
 			return fiberadapter.JSON(c, http.StatusOK, map[string]string{"status": "ok"})
 		}

@@ -9,7 +9,7 @@ import (
 	echolib "github.com/labstack/echo/v4"
 	"github.com/yzidev/goas/adapters/echoadapter"
 
-	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas"
 )
 
 type User struct {
@@ -106,7 +106,7 @@ func main() {
 		return c.NoContent(http.StatusNoContent)
 	})
 
-	echoadapter.Docs(base, openapi.Config{
+	echoadapter.Docs(base, goas.Config{
 		Title:   "User API",
 		Version: "1.0.0",
 		Tags:    openapi3.Tags{{Name: "Users", Description: "User management endpoints"}},

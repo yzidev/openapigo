@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas"
 )
 
 func TestHTTPRouterNew(t *testing.T) {
@@ -15,13 +15,13 @@ func TestHTTPRouterNew(t *testing.T) {
 	if r == nil {
 		t.Fatalf("New() returned nil")
 	}
-	openapiCfg := openapi.Config{Title: "smoke", Version: "0"}
+	openapiCfg := goas.Config{Title: "smoke", Version: "0"}
 	Register(r, openapiCfg)
 }
 
 func TestMuxMountAllowsRoutesAfterDocs(t *testing.T) {
 	mux := http.NewServeMux()
-	r := Mount(mux, openapi.Config{Title: "native", Version: "1"})
+	r := Mount(mux, goas.Config{Title: "native", Version: "1"})
 	r.GET("/users/{id}", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}, Res(map[string]string{}), Tags("Users"))

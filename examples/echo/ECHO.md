@@ -40,7 +40,7 @@ OpenAPI JSON:
 import (
     echolib "github.com/labstack/echo/v4"
     echoadapter "github.com/yzidev/goas/adapters/echoadapter"
-    "github.com/yzidev/goas/openapi"
+    "github.com/yzidev/goas"
 )
 ```
 
@@ -65,7 +65,7 @@ users.POST("/users/upload", uploadUserFile)
 4) Mount OpenAPI and run
 
 ```go
-echoadapter.Docs(base, openapi.Config{Title: "User API", Version: "1.0.0"})
+echoadapter.Docs(base, goas.Config{Title: "User API", Version: "1.0.0"})
 base.Start(":8080")
 ```
 

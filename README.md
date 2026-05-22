@@ -40,7 +40,7 @@ This README continues with the features you get and examples on how to use the l
 
 Use the built-in router:
 
-- `openapi.New(...)` → returns an `http.Handler` (lightweight net/http-backed router)
+- `goas.New(...)` → returns an `http.Handler` (lightweight net/http-backed router)
 - register routes with `GET/POST/PUT/PATCH/DELETE`
 - call `Docs()` once after registering your routes to mount `/openapi.json` and Swagger UI
 
@@ -51,7 +51,7 @@ Note: the default router implementation used to be chi-backed; it now uses a sma
 Go handlers don’t expose schema information automatically.
 So Goas uses a **config-first** approach:
 
-- put route schemas/tags/security/query/header params in one place using `openapi/spec`
+- put route schemas/tags/security/query/header params in one place using `spec`
 - keep your handlers clean and readable
 
 ### 3) Multipart upload support
@@ -76,7 +76,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas"
 )
 
 type User struct {
@@ -85,18 +85,18 @@ type User struct {
 }
 
 func main() {
-	r := openapi.New(openapi.Config{Title: "User API", Version: "1.0.0"})
+	r := goas.New(goas.Config{Title: "User API", Version: "1.0.0"})
 
 	r.GET("/users", func(w http.ResponseWriter, _ *http.Request) {
-		openapi.JSON(w, http.StatusOK, []User{{ID: "1", Name: "Alice"}})
-	}, openapi.Res([]User{}), openapi.Tags("Users"))
+		goas.JSON(w, http.StatusOK, []User{{ID: "1", Name: "Alice"}})
+	}, goas.Res([]User{}), goas.Tags("Users"))
 
 	r.Docs()
 	_ = http.ListenAndServe(":8080", r)
 }
 ```
 
-Prefer grouped config instead of per-route options? `openapi/spec` is still available as an advanced config-first layer:
+Prefer grouped config instead of per-route options? `spec` is still available as an advanced config-first layer:
 
 ```go
 b := spec.New()
@@ -104,7 +104,7 @@ b.GroupTags("", []string{"Users"}, func(s *spec.SpecBuilder) {
 	s.GET("/users").Res([]User{}).OK()
 })
 
-base := openapi.New(openapi.Config{Title: "User API", Version: "1.0.0"})
+base := goas.New(goas.Config{Title: "User API", Version: "1.0.0"})
 r := spec.HTTP(base, b.Spec())
 r.GET("/users", listUsers)
 base.Docs()
@@ -124,7 +124,7 @@ engine := gin.Default()
 engine.GET("/users/:id", getUser)
 engine.POST("/users", createUser)
 
-ginadapter.Docs(engine, openapi.Config{
+ginadapter.Docs(engine, goas.Config{
 	Title:   "User API",
 	Version: "1.0.0",
 })
@@ -143,26 +143,26 @@ r.POST("/users", createUser,
 	ginadapter.Res(User{}),
 	ginadapter.Created(),
 )
-r.Docs(openapi.Config{Title: "User API", Version: "1.0.0"})
+r.Docs(goas.Config{Title: "User API", Version: "1.0.0"})
 ```
 
-For the built-in net/http router or `muxadapter`, use `openapi.New(...)` or
+For the built-in net/http router or `muxadapter`, use `goas.New(...)` or
 `muxadapter.Mount(...)`:
 
 ```go
 mux := http.NewServeMux()
-r := muxadapter.Mount(mux, openapi.Config{
+r := muxadapter.Mount(mux, goas.Config{
 	Title:   "User API",
 	Version: "1.0.0",
 })
 
-r.GET("/users/{id}", getUser, openapi.Res(User{}), openapi.Tags("Users"))
+r.GET("/users/{id}", getUser, goas.Res(User{}), goas.Tags("Users"))
 
 _ = http.ListenAndServe(":8080", mux)
 ```
 
 Note: the standard `http.ServeMux` does not expose registered route metadata, so
-Goas can auto-document routes registered through `openapi.Router` or
+Goas can auto-document routes registered through `goas.Router` or
 `muxadapter.Router`, but not arbitrary handlers registered directly on
 `http.ServeMux`.
 
@@ -174,20 +174,20 @@ On a route:
 
 ```go
 r.POST("/users/upload", uploadUserFile,
-	openapi.MultipartUpload(
+	goas.MultipartUpload(
 		"file",
-		openapi.MultipartField{Name: "note", Type: openapi.ParamString},
+		goas.MultipartField{Name: "note", Type: goas.ParamString},
 	),
-	openapi.Res(map[string]string{}),
+	goas.Res(map[string]string{}),
 )
 ```
 
-In `openapi/spec`, the equivalent is:
+In `spec`, the equivalent is:
 
 ```go
 s.POST("/users/upload").MultipartUpload(
 	"file",
-	openapi.MultipartField{Name: "note", Type: openapi.ParamString},
+	goas.MultipartField{Name: "note", Type: goas.ParamString},
 ).Res(map[string]string{}).OK()
 ```
 
@@ -200,9 +200,9 @@ In Swagger UI this will show:
 
 ## Security
 
-You can provide security schemes via `openapi.Config.SecuritySchemes`.
-For Springdoc-like auto-docs, set `openapi.Config.Security` as a global requirement.
-For route-specific security, attach requirements per route with `openapi.Security(...)` or adapter aliases like `ginadapter.Security(...)`.
+You can provide security schemes via `goas.Config.SecuritySchemes`.
+For Springdoc-like auto-docs, set `goas.Config.Security` as a global requirement.
+For route-specific security, attach requirements per route with `goas.Security(...)` or adapter aliases like `ginadapter.Security(...)`.
 Examples include two schemes:
 
 - **Bearer** JWT (`Authorization: Bearer <token>`)
@@ -218,22 +218,22 @@ Run examples and open Swagger UI:
 
 ### Default (net/http)
 
-- Docs: [`EXAMPLE_HTTPROUTER.md`](examples/httprouter/EXAMPLE_HTTPROUTER.mdMPLE_HTTPROUTER.md)
+- Docs: [`HTTPROUTER.md`](examples/httprouter/HTTPROUTER.md)
   (See the doc above for run commands, endpoints, security, and upload sample.)
 
 ### Gin
 
-- Docs: [`EXAMPLE_GIN.md`](examples/gin/EXAMPLE_GIN.mdMPLE_GIN.md)
+- Docs: [`GIN.md`](examples/gin/GIN.md)
   (See the doc above for run commands, endpoints, security, and upload sample.)
 
 ### Echo
 
-- Docs: [`EXAMPLE_ECHO.md`](examples/echo/EXAMPLE_ECHO.mdMPLE_ECHO.md)
+- Docs: [`ECHO.md`](examples/echo/ECHO.md)
   (See the doc above for run commands, endpoints, security, and upload sample.)
 
 ### Fiber
 
-- Docs: [`EXAMPLE_FIBER.md`](examples/fiber/EXAMPLE_FIBER.mdMPLE_FIBER.md)
+- Docs: [`FIBER.md`](examples/fiber/FIBER.md)
   (See the doc above for run commands, endpoints, security, and upload sample.)
 
 ---
@@ -242,7 +242,7 @@ Run examples and open Swagger UI:
 
 Goas is currently focused on **4 frameworks/router setups**:
 
-1. **net/http (built-in `openapi.Router` based on chi)**
+1. **net/http (built-in `goas.Router`)**
 2. **Gin**
 3. **Echo**
 4. **Fiber**
@@ -263,7 +263,7 @@ The direction going forward:
 - **Keep the public API simple**:
   - common HTTP methods only: `GET/POST/PUT/PATCH/DELETE`
   - grouping via `Group(...)`
-  - OpenAPI metadata via route options or config-first spec (`openapi/spec`)
+  - OpenAPI metadata via route options or config-first spec (`spec`)
 
 - **Improve schema inference gradually**:
   - better tag support (`omitempty`, pointer handling)
@@ -284,7 +284,7 @@ The direction going forward:
 ### Update policy / compatibility
 
 - The project is evolving quickly.
-- We aim to keep the **core API stable** (`openapi.New`, `openapi.Router`, `openapi.Register`, and `openapi/spec`).
+- We aim to keep the **core API stable** (`goas.New`, `goas.Router`, `goas.Register`, and `spec`).
 - Adapter APIs may change as we simplify integration and keep parity across frameworks.
 
 ### Framework support timeline
@@ -306,7 +306,7 @@ If you want to support another framework, the recommended approach is:
 - The adapter should expose a router wrapper similar to the existing ones:
   - register `GET/POST/PUT/PATCH/DELETE`
   - keep grouping if the framework supports groups
-  - call `openapi.Router.Handle(...)` / attach `HandlerOption`s in the same way.
+  - call `goas.Router.Handle(...)` / attach `HandlerOption`s in the same way.
 
 For a starting point, check:
 - `adapters/gin`
@@ -323,7 +323,7 @@ handler code clean while still generating OpenAPI and mounting Swagger UI.
 Pattern (recommended):
 
 1. Create your framework engine/app (e.g., `gin`, `echo`, `fiber`).
-2. For zero-config route discovery, call `ginadapter.Docs(engine, cfg)`, `echoadapter.Docs(e, cfg)`, or `fiberadapter.Docs(app, cfg)`. For net/http, use `openapi.New(...)` or `muxadapter.Mount(...)`.
+2. For zero-config route discovery, call `ginadapter.Docs(engine, cfg)`, `echoadapter.Docs(e, cfg)`, or `fiberadapter.Docs(app, cfg)`. For net/http, use `goas.New(...)` or `muxadapter.Mount(...)`.
 3. If you want body schemas/tags/security per route, wrap with `Wrap`/`New` and register routes with short options like `Res`, `Req`, `Tags`, and `Created`.
 4. Run the engine/app.
 
@@ -334,13 +334,13 @@ Examples:
 ```go
 import (
     ginlib "github.com/gin-gonic/gin"
-    "github.com/yzidev/goas/openapi"
+    "github.com/yzidev/goas"
     "github.com/yzidev/goas/adapters/ginadapter"
 )
 
 engine := ginlib.New()
 engine.GET("/users", listUsers)
-ginadapter.Docs(engine, openapi.Config{Title: "My API", Version: "0.1.0"})
+ginadapter.Docs(engine, goas.Config{Title: "My API", Version: "0.1.0"})
 engine.Run(":8080")
 ```
 
@@ -349,13 +349,13 @@ engine.Run(":8080")
 ```go
 import (
     echolib "github.com/labstack/echo/v4"
-    "github.com/yzidev/goas/openapi"
+    "github.com/yzidev/goas"
     "github.com/yzidev/goas/adapters/echoadapter"
 )
 
 base := echolib.New()
 base.GET("/users", listUsers)
-echoadapter.Docs(base, openapi.Config{Title: "My API", Version: "0.1.0"})
+echoadapter.Docs(base, goas.Config{Title: "My API", Version: "0.1.0"})
 base.Start(":8080")
 ```
 
@@ -364,13 +364,13 @@ base.Start(":8080")
 ```go
 import (
     fiberlib "github.com/gofiber/fiber/v2"
-    "github.com/yzidev/goas/openapi"
+    "github.com/yzidev/goas"
     "github.com/yzidev/goas/adapters/fiberadapter"
 )
 
 app := fiberlib.New()
 app.Get("/users", listUsers)
-fiberadapter.Docs(app, openapi.Config{Title: "My API", Version: "0.1.0"})
+fiberadapter.Docs(app, goas.Config{Title: "My API", Version: "0.1.0"})
 app.Listen(":8080")
 ```
 

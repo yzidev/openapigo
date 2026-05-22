@@ -8,7 +8,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	echolib "github.com/labstack/echo/v4"
-	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas"
 )
 
 func TestEchoNewAndWrap(t *testing.T) {
@@ -20,7 +20,7 @@ func TestEchoNewAndWrap(t *testing.T) {
 	if r2 == nil || r2.Echo == nil {
 		t.Fatalf("NewEchoAdapters(nil) returned nil")
 	}
-	openapiCfg := openapi.Config{Title: "smoke", Version: "0"}
+	openapiCfg := goas.Config{Title: "smoke", Version: "0"}
 	Register(r, openapiCfg)
 }
 
@@ -30,7 +30,7 @@ func TestEchoDocsDiscoversNativeRoutes(t *testing.T) {
 		return c.NoContent(http.StatusOK)
 	})
 
-	Docs(e, openapi.Config{Title: "native", Version: "1"})
+	Docs(e, goas.Config{Title: "native", Version: "1"})
 
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/openapi.json", nil)

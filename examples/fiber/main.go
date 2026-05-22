@@ -8,8 +8,8 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	fiberlib "github.com/gofiber/fiber/v2"
 
+	"github.com/yzidev/goas"
 	"github.com/yzidev/goas/adapters/fiberadapter"
-	"github.com/yzidev/goas/openapi"
 )
 
 type User struct {
@@ -105,7 +105,7 @@ func main() {
 		return c.SendStatus(http.StatusNoContent)
 	})
 
-	fiberadapter.Docs(base, openapi.Config{
+	fiberadapter.Docs(base, goas.Config{
 		Title:   "User API",
 		Version: "1.0.0",
 		Tags:    openapi3.Tags{{Name: "Users", Description: "User management endpoints"}},

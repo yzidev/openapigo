@@ -9,7 +9,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	fiberlib "github.com/gofiber/fiber/v2"
-	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas"
 )
 
 func TestFiberNewAndWrap(t *testing.T) {
@@ -21,7 +21,7 @@ func TestFiberNewAndWrap(t *testing.T) {
 	if r2 == nil || r2.App == nil {
 		t.Fatalf("NewFiberAdapters(nil) returned nil")
 	}
-	openapiCfg := openapi.Config{Title: "smoke", Version: "0"}
+	openapiCfg := goas.Config{Title: "smoke", Version: "0"}
 	Register(r, openapiCfg)
 }
 
@@ -31,7 +31,7 @@ func TestFiberDocsDiscoversNativeRoutes(t *testing.T) {
 		return c.SendStatus(http.StatusOK)
 	})
 
-	Docs(app, openapi.Config{Title: "native", Version: "1"})
+	Docs(app, goas.Config{Title: "native", Version: "1"})
 
 	req := httptest.NewRequest(http.MethodGet, "/openapi.json", nil)
 	resp, err := app.Test(req)

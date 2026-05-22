@@ -10,7 +10,7 @@ import (
 	echolib "github.com/labstack/echo/v4"
 	"github.com/yzidev/goas/adapters/echoadapter"
 
-	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas"
 )
 
 type SecUser struct {
@@ -23,7 +23,7 @@ func main() {
 	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
 	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
 
-	cfg := openapi.Config{
+	cfg := goas.Config{
 		Title:   "User API (Echo + Security)",
 		Version: "1.0.0",
 		SecuritySchemes: map[string]*openapi3.SecuritySchemeRef{
@@ -52,11 +52,11 @@ func main() {
 
 	secure.POST("/secure/users/upload", func(c echolib.Context) error {
 		if c.Request().Header.Get("X-API-Key") == "" {
-			return echoadapter.JSON(c, http.StatusUnauthorized, openapi.ErrorResponse{Error: "unauthorized"})
+			return echoadapter.JSON(c, http.StatusUnauthorized, goas.ErrorResponse{Error: "unauthorized"})
 		}
 		f, err := c.FormFile("file")
 		if err != nil {
-			return echoadapter.JSON(c, http.StatusBadRequest, openapi.ErrorResponse{Error: "missing file"})
+			return echoadapter.JSON(c, http.StatusBadRequest, goas.ErrorResponse{Error: "missing file"})
 		}
 		note := c.FormValue("note")
 		return echoadapter.JSON(c, http.StatusOK, map[string]string{"filename": f.Filename, "note": note})
@@ -65,15 +65,15 @@ func main() {
 	secure.GET("/secure/demo-errors", func(c echolib.Context) error {
 		auth := c.Request().Header.Get("Authorization")
 		if !strings.HasPrefix(auth, "Bearer ") {
-			return echoadapter.JSON(c, http.StatusUnauthorized, openapi.ErrorResponse{Error: "unauthorized"})
+			return echoadapter.JSON(c, http.StatusUnauthorized, goas.ErrorResponse{Error: "unauthorized"})
 		}
 		switch c.QueryParam("code") {
 		case "400":
-			return echoadapter.JSON(c, http.StatusBadRequest, openapi.ErrorResponse{Error: "bad request"})
+			return echoadapter.JSON(c, http.StatusBadRequest, goas.ErrorResponse{Error: "bad request"})
 		case "500":
-			return echoadapter.JSON(c, http.StatusInternalServerError, openapi.ErrorResponse{Error: "internal error"})
+			return echoadapter.JSON(c, http.StatusInternalServerError, goas.ErrorResponse{Error: "internal error"})
 		case "503":
-			return echoadapter.JSON(c, http.StatusServiceUnavailable, openapi.ErrorResponse{Error: "service unavailable"})
+			return echoadapter.JSON(c, http.StatusServiceUnavailable, goas.ErrorResponse{Error: "service unavailable"})
 		default:
 			return echoadapter.JSON(c, http.StatusOK, map[string]string{"status": "ok"})
 		}

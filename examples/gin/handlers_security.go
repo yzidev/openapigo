@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	ginlib "github.com/gin-gonic/gin"
-	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas"
 )
 
 func requireBearer(c *ginlib.Context) bool {
@@ -50,18 +50,18 @@ func handleSecureCreateUser(c *ginlib.Context) {
 
 func handleSecureDemoErrors(c *ginlib.Context) {
 	if !requireBearer(c) {
-		c.JSON(http.StatusUnauthorized, openapi.ErrorResponse{Error: "unauthorized"})
+		c.JSON(http.StatusUnauthorized, goas.ErrorResponse{Error: "unauthorized"})
 		return
 	}
 	switch c.Query("code") {
 	case "400":
-		c.JSON(http.StatusBadRequest, openapi.ErrorResponse{Error: "bad request"})
+		c.JSON(http.StatusBadRequest, goas.ErrorResponse{Error: "bad request"})
 		return
 	case "500":
-		c.JSON(http.StatusInternalServerError, openapi.ErrorResponse{Error: "internal error"})
+		c.JSON(http.StatusInternalServerError, goas.ErrorResponse{Error: "internal error"})
 		return
 	case "503":
-		c.JSON(http.StatusServiceUnavailable, openapi.ErrorResponse{Error: "service unavailable"})
+		c.JSON(http.StatusServiceUnavailable, goas.ErrorResponse{Error: "service unavailable"})
 		return
 	default:
 		c.JSON(http.StatusOK, map[string]string{"status": "ok"})
@@ -70,12 +70,12 @@ func handleSecureDemoErrors(c *ginlib.Context) {
 
 func handleSecureUploadUserFile(c *ginlib.Context) {
 	if c.GetHeader("X-API-Key") == "" {
-		c.JSON(http.StatusUnauthorized, openapi.ErrorResponse{Error: "unauthorized"})
+		c.JSON(http.StatusUnauthorized, goas.ErrorResponse{Error: "unauthorized"})
 		return
 	}
 	file, err := c.FormFile("file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi.ErrorResponse{Error: "missing file"})
+		c.JSON(http.StatusBadRequest, goas.ErrorResponse{Error: "missing file"})
 		return
 	}
 	note := c.PostForm("note")

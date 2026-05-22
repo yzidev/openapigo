@@ -3,14 +3,14 @@ package muxadapter
 import (
 	"net/http"
 
-	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas"
 )
 
 // Router is the default net/http router implementation.
 //
-// Today it re-exports the chi-based implementation from the openapi package.
-// Later we can make openapi core framework-agnostic and keep the net/http router here.
-type Router = openapi.Router
+// Today it re-exports the net/http implementation from the goas package.
+// Later we can make goas core framework-agnostic and keep the net/http router here.
+type Router = goas.Router
 
 // NewHttpAdapters creates a new adapter Router. If an *http.ServeMux is provided it will
 // automatically mount the created router on the mux under the root path "/",
@@ -21,7 +21,7 @@ func NewHttpAdapters(mux ...*http.ServeMux) *Router {
 
 // New creates the default net/http Goas router adapter.
 func New(mux ...*http.ServeMux) *Router {
-	r := openapi.NewRouter()
+	r := goas.NewRouter()
 	if len(mux) > 0 && mux[0] != nil {
 		mux[0].Handle("/", r)
 	}
@@ -29,7 +29,7 @@ func New(mux ...*http.ServeMux) *Router {
 }
 
 // Docs mounts OpenAPI JSON and Swagger UI for a net/http Goas router.
-func Docs(r *Router, cfg openapi.Config) {
+func Docs(r *Router, cfg goas.Config) {
 	if r == nil {
 		return
 	}
@@ -37,51 +37,51 @@ func Docs(r *Router, cfg openapi.Config) {
 }
 
 // AutoDocs is an alias for Docs.
-func AutoDocs(r *Router, cfg openapi.Config) {
+func AutoDocs(r *Router, cfg goas.Config) {
 	Docs(r, cfg)
 }
 
 // Mount creates an Goas router, mounts it on mux, and registers docs.
 // Use this for a Springdoc-like setup with net/http:
 //
-//	r := muxadapter.Mount(mux, openapi.Config{Title: "API", Version: "1.0.0"})
+//	r := muxadapter.Mount(mux, goas.Config{Title: "API", Version: "1.0.0"})
 //	r.GET("/users", listUsers)
-func Mount(mux *http.ServeMux, cfg openapi.Config) *Router {
+func Mount(mux *http.ServeMux, cfg goas.Config) *Router {
 	r := New(mux)
 	r.Docs(cfg)
 	return r
 }
 
 // HandlerOption Re-export route options for convenience.
-type HandlerOption = openapi.HandlerOption
+type HandlerOption = goas.HandlerOption
 
 var (
-	WithRequestSchema  = openapi.WithRequestSchema
-	WithResponseSchema = openapi.WithResponseSchema
-	WithSecurity       = openapi.WithSecurity
-	WithTags           = openapi.WithTags
-	WithResponses      = openapi.WithResponses
-	WithQueryParams    = openapi.WithQueryParams
-	Req                = openapi.Req
-	MultipartUpload    = openapi.MultipartUpload
-	Res                = openapi.Res
-	Tags               = openapi.Tags
-	Security           = openapi.Security
-	Query              = openapi.Query
-	Headers            = openapi.Headers
-	Status             = openapi.Status
-	Created            = openapi.Created
-	NoContent          = openapi.NoContent
-	Responses          = openapi.Responses
-	JSONRoute          = openapi.JSONRoute
+	WithRequestSchema  = goas.WithRequestSchema
+	WithResponseSchema = goas.WithResponseSchema
+	WithSecurity       = goas.WithSecurity
+	WithTags           = goas.WithTags
+	WithResponses      = goas.WithResponses
+	WithQueryParams    = goas.WithQueryParams
+	Req                = goas.Req
+	MultipartUpload    = goas.MultipartUpload
+	Res                = goas.Res
+	Tags               = goas.Tags
+	Security           = goas.Security
+	Query              = goas.Query
+	Headers            = goas.Headers
+	Status             = goas.Status
+	Created            = goas.Created
+	NoContent          = goas.NoContent
+	Responses          = goas.Responses
+	JSONRoute          = goas.JSONRoute
 )
 
 // Re-export helpers.
 var (
-	Register  = openapi.Register
-	Bind      = openapi.Bind
-	JSON      = openapi.JSON
-	PathValue = openapi.PathValue
-	BuildSpec = openapi.BuildSpec
+	Register  = goas.Register
+	Bind      = goas.Bind
+	JSON      = goas.JSON
+	PathValue = goas.PathValue
+	BuildSpec = goas.BuildSpec
 	_         = http.MethodGet
 )

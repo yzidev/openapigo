@@ -7,13 +7,13 @@ import (
 	fiberlib "github.com/gofiber/fiber/v2"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/yzidev/goas/openapi"
-	"github.com/yzidev/goas/openapi/ui"
+	"github.com/yzidev/goas"
+	"github.com/yzidev/goas/ui"
 )
 
 type Router struct {
 	App    *fiberlib.App
-	routes []openapi.RouteMeta
+	routes []goas.RouteMeta
 }
 
 func New(app ...*fiberlib.App) *Router {
@@ -37,31 +37,31 @@ func Wrap(app *fiberlib.App) *Router {
 	return &Router{App: app}
 }
 
-type HandlerOption = openapi.HandlerOption
+type HandlerOption = goas.HandlerOption
 
 var (
-	WithRequestSchema  = openapi.WithRequestSchema
-	WithResponseSchema = openapi.WithResponseSchema
-	WithSecurity       = openapi.WithSecurity
-	WithTags           = openapi.WithTags
-	WithResponses      = openapi.WithResponses
-	WithQueryParams    = openapi.WithQueryParams
-	Req                = openapi.Req
-	MultipartUpload    = openapi.MultipartUpload
-	Res                = openapi.Res
-	Tags               = openapi.Tags
-	Security           = openapi.Security
-	Query              = openapi.Query
-	Headers            = openapi.Headers
-	Status             = openapi.Status
-	Created            = openapi.Created
-	NoContent          = openapi.NoContent
-	Responses          = openapi.Responses
-	JSONRoute          = openapi.JSONRoute
+	WithRequestSchema  = goas.WithRequestSchema
+	WithResponseSchema = goas.WithResponseSchema
+	WithSecurity       = goas.WithSecurity
+	WithTags           = goas.WithTags
+	WithResponses      = goas.WithResponses
+	WithQueryParams    = goas.WithQueryParams
+	Req                = goas.Req
+	MultipartUpload    = goas.MultipartUpload
+	Res                = goas.Res
+	Tags               = goas.Tags
+	Security           = goas.Security
+	Query              = goas.Query
+	Headers            = goas.Headers
+	Status             = goas.Status
+	Created            = goas.Created
+	NoContent          = goas.NoContent
+	Responses          = goas.Responses
+	JSONRoute          = goas.JSONRoute
 )
 
 func (r *Router) Handle(method, path string, h fiberlib.Handler, opts ...HandlerOption) {
-	meta := openapi.RouteMeta{Method: method, Path: path}
+	meta := goas.RouteMeta{Method: method, Path: path}
 	for _, opt := range opts {
 		opt(&meta)
 	}
@@ -92,26 +92,26 @@ func (r *Router) OPTIONS(path string, h fiberlib.Handler, opts ...HandlerOption)
 	r.Handle(http.MethodOptions, path, h, opts...)
 }
 
-func (r *Router) Routes() []openapi.RouteMeta { return r.routes }
+func (r *Router) Routes() []goas.RouteMeta { return r.routes }
 
 // Docs mounts the generated OpenAPI JSON document and Swagger UI.
-func (r *Router) Docs(cfg openapi.Config) {
+func (r *Router) Docs(cfg goas.Config) {
 	Register(r, cfg)
 }
 
 // Docs mounts OpenAPI JSON and Swagger UI for a native Fiber app.
 // It discovers routes registered directly on Fiber, so you can use plain Fiber
 // routing and add Goas with a single call.
-func Docs(app *fiberlib.App, cfg openapi.Config) {
+func Docs(app *fiberlib.App, cfg goas.Config) {
 	Wrap(app).Docs(cfg)
 }
 
 // AutoDocs is an alias for Docs.
-func AutoDocs(app *fiberlib.App, cfg openapi.Config) {
+func AutoDocs(app *fiberlib.App, cfg goas.Config) {
 	Docs(app, cfg)
 }
 
-func Register(r *Router, cfg openapi.Config) {
+func Register(r *Router, cfg goas.Config) {
 	specPath := cfg.SpecPath
 	if specPath == "" {
 		specPath = "/openapi.json"
@@ -124,7 +124,7 @@ func Register(r *Router, cfg openapi.Config) {
 	indexPath := mount + "/index.html"
 
 	r.App.Get(specPath, func(c *fiberlib.Ctx) error {
-		doc := openapi.BuildSpec(r.discoveredRoutes(specPath, mount, indexPath), cfg)
+		doc := goas.BuildSpec(r.discoveredRoutes(specPath, mount, indexPath), cfg)
 		return c.Status(200).JSON(doc)
 	})
 
@@ -145,8 +145,8 @@ func Register(r *Router, cfg openapi.Config) {
 	r.App.Get("/swagger/", redirect)
 }
 
-func (r *Router) discoveredRoutes(specPath, mount, indexPath string) []openapi.RouteMeta {
-	routes := append([]openapi.RouteMeta(nil), r.routes...)
+func (r *Router) discoveredRoutes(specPath, mount, indexPath string) []goas.RouteMeta {
+	routes := append([]goas.RouteMeta(nil), r.routes...)
 	seen := map[string]bool{}
 	for _, route := range routes {
 		seen[route.Method+" "+route.Path] = true
@@ -160,7 +160,7 @@ func (r *Router) discoveredRoutes(specPath, mount, indexPath string) []openapi.R
 			continue
 		}
 		seen[key] = true
-		routes = append(routes, openapi.RouteMeta{Method: route.Method, Path: route.Path})
+		routes = append(routes, goas.RouteMeta{Method: route.Method, Path: route.Path})
 	}
 	return routes
 }

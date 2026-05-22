@@ -6,7 +6,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	ginlib "github.com/gin-gonic/gin"
 
-	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas"
 )
 
 // registerRoutes wires the endpoints in a readable and grouped way.
@@ -30,8 +30,8 @@ func registerUserRoutes(r *ginlib.Engine) {
 	users.DELETE("/users/:id", handleDeleteUser)
 }
 
-func openAPICfg() openapi.Config {
-	return openapi.Config{
+func openAPICfg() goas.Config {
+	return goas.Config{
 		Title:   "User API",
 		Version: "1.0.0",
 		Tags: openapi3.Tags{

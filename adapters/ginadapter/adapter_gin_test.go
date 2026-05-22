@@ -8,7 +8,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	ginlib "github.com/gin-gonic/gin"
-	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas"
 )
 
 func TestGinNewAndWrap(t *testing.T) {
@@ -22,7 +22,7 @@ func TestGinNewAndWrap(t *testing.T) {
 		t.Fatalf("NewGinOAS(nil) returned nil")
 	}
 	// Register should not panic with minimal config
-	openapiCfg := openapi.Config{Title: "smoke", Version: "0"}
+	openapiCfg := goas.Config{Title: "smoke", Version: "0"}
 	Register(r, openapiCfg)
 }
 
@@ -32,7 +32,7 @@ func TestGinDocsDiscoversNativeRoutes(t *testing.T) {
 		c.Status(http.StatusOK)
 	})
 
-	Docs(engine, openapi.Config{Title: "native", Version: "1"})
+	Docs(engine, goas.Config{Title: "native", Version: "1"})
 
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/openapi.json", nil)

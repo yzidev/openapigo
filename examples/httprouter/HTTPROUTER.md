@@ -1,6 +1,6 @@
 # net/http (default) router example (Goas)
 
-The "default" router in this repo is `openapi.Router` (a lightweight net/http-based mux).
+The "default" router in this repo is `goas.Router` (a lightweight net/http-based mux).
 
 ## Quick start
 
@@ -35,7 +35,7 @@ import (
     "net/http"
 
     "github.com/yzidev/goas/adapters/muxadapter"
-    "github.com/yzidev/goas/openapi"
+    "github.com/yzidev/goas"
 )
 ```
 
@@ -43,29 +43,29 @@ import (
 
 ```go
 mux := http.NewServeMux()
-r := muxadapter.Mount(mux, openapi.Config{Title: "User API", Version: "1.0.0"})
+r := muxadapter.Mount(mux, goas.Config{Title: "User API", Version: "1.0.0"})
 ```
 
 3) Register handlers using route options
 
 ```go
 r.GET("/users", func(w http.ResponseWriter, _ *http.Request) {
-    openapi.JSON(w, http.StatusOK, []User{{ID: "1", Name: "Alice"}})
-}, openapi.Res([]User{}), openapi.Tags("Users"))
+    goas.JSON(w, http.StatusOK, []User{{ID: "1", Name: "Alice"}})
+}, goas.Res([]User{}), goas.Tags("Users"))
 
 r.POST("/users", func(w http.ResponseWriter, req *http.Request) {
     var in CreateUser
-    if err := openapi.Bind(req, &in); err != nil || in.Name == "" {
-        openapi.JSON(w, http.StatusBadRequest, ErrorResponse{Error: "invalid body"})
+    if err := goas.Bind(req, &in); err != nil || in.Name == "" {
+        goas.JSON(w, http.StatusBadRequest, ErrorResponse{Error: "invalid body"})
         return
     }
     w.WriteHeader(http.StatusCreated)
-}, openapi.Req(CreateUser{}), openapi.Res(User{}), openapi.Created(), openapi.Tags("Users"))
+}, goas.Req(CreateUser{}), goas.Res(User{}), goas.Created(), goas.Tags("Users"))
 
 r.POST("/users/upload", uploadUserFile,
-    openapi.MultipartUpload("file", openapi.MultipartField{Name: "note", Type: openapi.ParamString}),
-    openapi.Res(map[string]string{}),
-    openapi.Tags("Users"),
+    goas.MultipartUpload("file", goas.MultipartField{Name: "note", Type: goas.ParamString}),
+    goas.Res(map[string]string{}),
+    goas.Tags("Users"),
 )
 ```
 
@@ -77,11 +77,11 @@ _ = http.ListenAndServe(":8080", mux)
 
 5) Security (optional)
 
-- Define schemes in `openapi.Config.SecuritySchemes` and attach per-route via `openapi.Security(...)`.
+- Define schemes in `goas.Config.SecuritySchemes` and attach per-route via `goas.Security(...)`.
 
 6) Multipart uploads
 
-- Use `openapi.MultipartUpload(...)` to declare a `multipart/form-data` body with a file field; the Swagger UI will render a file chooser and corresponding fields.
+- Use `goas.MultipartUpload(...)` to declare a `multipart/form-data` body with a file field; the Swagger UI will render a file chooser and corresponding fields.
 
 ---
 

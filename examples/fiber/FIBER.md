@@ -40,7 +40,7 @@ OpenAPI JSON:
 import (
     fiberlib "github.com/gofiber/fiber/v2"
     fiberadapter "github.com/yzidev/goas/adapters/fiberadapter"
-    "github.com/yzidev/goas/openapi"
+    "github.com/yzidev/goas"
 )
 ```
 
@@ -65,7 +65,7 @@ users.Post("/users/upload", uploadUserFile)
 4) Mount OpenAPI and run
 
 ```go
-fiberadapter.Docs(app, openapi.Config{Title: "User API", Version: "1.0.0"})
+fiberadapter.Docs(app, goas.Config{Title: "User API", Version: "1.0.0"})
 app.Listen(":8080")
 ```
 
