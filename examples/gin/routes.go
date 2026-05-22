@@ -3,7 +3,6 @@
 package main
 
 import (
-	"github.com/getkin/kin-openapi/openapi3"
 	ginlib "github.com/gin-gonic/gin"
 
 	"github.com/yzidev/goas"
@@ -34,7 +33,7 @@ func openAPICfg() goas.Config {
 	return goas.Config{
 		Title:   "User API",
 		Version: "1.0.0",
-		Tags: openapi3.Tags{
+		Tags: goas.DocumentTags{
 			{Name: "Users", Description: "User management endpoints"},
 		},
 	}

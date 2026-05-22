@@ -4,10 +4,9 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
-
-	"github.com/getkin/kin-openapi/openapi3"
 
 	"github.com/yzidev/goas"
 )
@@ -21,18 +20,18 @@ func main() {
 	cfg := goas.Config{
 		Title:   "User API (Security)",
 		Version: "1.0.0",
-		Tags: openapi3.Tags{
+		Tags: goas.DocumentTags{
 			{Name: "Secure Users", Description: "Secured endpoints (Bearer / X-API-Key)"},
 		},
-		SecuritySchemes: map[string]*openapi3.SecuritySchemeRef{
-			"bearerAuth": {Value: &openapi3.SecurityScheme{Type: "http", Scheme: "bearer", BearerFormat: "JWT"}},
-			"apiKeyAuth": {Value: &openapi3.SecurityScheme{Type: "apiKey", In: "header", Name: "X-API-Key"}},
+		SecuritySchemes: map[string]*goas.SecuritySchemeRef{
+			"bearerAuth": {Value: &goas.SecurityScheme{Type: "http", Scheme: "bearer", BearerFormat: "JWT"}},
+			"apiKeyAuth": {Value: &goas.SecurityScheme{Type: "apiKey", In: "header", Name: "X-API-Key"}},
 		},
 	}
 
-	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
-	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
-	cfg.Security = openapi3.SecurityRequirements{bearer, apiKey}
+	bearer := goas.NewSecurityRequirement().Authenticate("bearerAuth")
+	apiKey := goas.NewSecurityRequirement().Authenticate("apiKeyAuth")
+	cfg.Security = goas.SecurityRequirements{bearer, apiKey}
 
 	r := goas.New(cfg)
 	secure := r.Group("", goas.Tags("Secure Users"))
@@ -99,5 +98,5 @@ func main() {
 	}, goas.Security(&bearer), goas.Res(map[string]string{}))
 
 	r.Docs()
-	_ = http.ListenAndServe(":8080", r)
+	log.Fatal(http.ListenAndServe(":8080", r))
 }

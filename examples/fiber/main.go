@@ -3,9 +3,9 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	fiberlib "github.com/gofiber/fiber/v2"
 
 	"github.com/yzidev/goas"
@@ -108,7 +108,7 @@ func main() {
 	fiberadapter.Docs(base, goas.Config{
 		Title:   "User API",
 		Version: "1.0.0",
-		Tags:    openapi3.Tags{{Name: "Users", Description: "User management endpoints"}},
+		Tags:    goas.DocumentTags{{Name: "Users", Description: "User management endpoints"}},
 	})
-	_ = base.Listen(":8080")
+	log.Fatal(base.Listen(":8080"))
 }

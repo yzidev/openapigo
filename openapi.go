@@ -15,8 +15,20 @@ const (
 	pathParamsKey contextKey = iota
 )
 
-// SecurityRequirement is re-exported for convenient route-level security options.
-type SecurityRequirement = openapi3.SecurityRequirement
+// Re-export common OpenAPI config types so applications can configure Goas
+// without importing the underlying kin-openapi package directly.
+type (
+	SecurityRequirement  = openapi3.SecurityRequirement
+	SecurityRequirements = openapi3.SecurityRequirements
+	SecurityScheme       = openapi3.SecurityScheme
+	SecuritySchemeRef    = openapi3.SecuritySchemeRef
+	Tag                  = openapi3.Tag
+	DocumentTags         = openapi3.Tags
+)
+
+func NewSecurityRequirement() SecurityRequirement {
+	return openapi3.NewSecurityRequirement()
+}
 
 func PathValue(r *http.Request, key string) string {
 	if p, ok := r.Context().Value(pathParamsKey).(map[string]string); ok {
@@ -29,9 +41,9 @@ type Config struct {
 	Title           string
 	Version         string
 	Description     string
-	SecuritySchemes map[string]*openapi3.SecuritySchemeRef
-	Security        openapi3.SecurityRequirements
-	Tags            openapi3.Tags
+	SecuritySchemes map[string]*SecuritySchemeRef
+	Security        SecurityRequirements
+	Tags            DocumentTags
 	SpecPath        string
 	SwaggerPath     string
 

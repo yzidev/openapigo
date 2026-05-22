@@ -3,10 +3,10 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	fiberlib "github.com/gofiber/fiber/v2"
 
 	"github.com/yzidev/goas"
@@ -20,17 +20,17 @@ type SecUser struct {
 
 func main() {
 	base := fiberlib.New()
-	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
-	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
+	bearer := goas.NewSecurityRequirement().Authenticate("bearerAuth")
+	apiKey := goas.NewSecurityRequirement().Authenticate("apiKeyAuth")
 
 	cfg := goas.Config{
 		Title:   "User API (Fiber + Security)",
 		Version: "1.0.0",
-		SecuritySchemes: map[string]*openapi3.SecuritySchemeRef{
-			"bearerAuth": {Value: &openapi3.SecurityScheme{Type: "http", Scheme: "bearer", BearerFormat: "JWT"}},
-			"apiKeyAuth": {Value: &openapi3.SecurityScheme{Type: "apiKey", In: "header", Name: "X-API-Key"}},
+		SecuritySchemes: map[string]*goas.SecuritySchemeRef{
+			"bearerAuth": {Value: &goas.SecurityScheme{Type: "http", Scheme: "bearer", BearerFormat: "JWT"}},
+			"apiKeyAuth": {Value: &goas.SecurityScheme{Type: "apiKey", In: "header", Name: "X-API-Key"}},
 		},
-		Security: openapi3.SecurityRequirements{bearer, apiKey},
+		Security: goas.SecurityRequirements{bearer, apiKey},
 	}
 
 	secure := base.Group("")
@@ -79,5 +79,5 @@ func main() {
 	})
 
 	fiberadapter.Docs(base, cfg)
-	_ = base.Listen(":8080")
+	log.Fatal(base.Listen(":8080"))
 }

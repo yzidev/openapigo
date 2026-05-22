@@ -3,6 +3,8 @@
 package main
 
 import (
+	"log"
+
 	ginlib "github.com/gin-gonic/gin"
 	"github.com/yzidev/goas/adapters/ginadapter"
 )
@@ -31,5 +33,5 @@ func main() {
 	registerUserRoutes(engine)
 
 	ginadapter.Docs(engine, openAPICfg())
-	_ = engine.Run(":8080")
+	log.Fatal(engine.Run(":8080"))
 }

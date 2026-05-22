@@ -3,28 +3,27 @@
 package main
 
 import (
-	"github.com/getkin/kin-openapi/openapi3"
 	ginlib "github.com/gin-gonic/gin"
 
 	"github.com/yzidev/goas"
 )
 
 func openAPICfgSecurity() goas.Config {
-	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
-	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
+	bearer := goas.NewSecurityRequirement().Authenticate("bearerAuth")
+	apiKey := goas.NewSecurityRequirement().Authenticate("apiKeyAuth")
 
 	return goas.Config{
 		Title:       "User API (Gin + Security)",
 		Version:     "1.0.0",
 		Description: "An examples API with secured endpoints using Gin and Goas",
-		Tags: openapi3.Tags{
+		Tags: goas.DocumentTags{
 			{Name: "Secure Users", Description: "Secured endpoints (Bearer / X-API-Key)"},
 		},
-		SecuritySchemes: map[string]*openapi3.SecuritySchemeRef{
-			"bearerAuth": {Value: &openapi3.SecurityScheme{Type: "http", Scheme: "bearer", BearerFormat: "JWT"}},
-			"apiKeyAuth": {Value: &openapi3.SecurityScheme{Type: "apiKey", In: "header", Name: "X-API-Key"}},
+		SecuritySchemes: map[string]*goas.SecuritySchemeRef{
+			"bearerAuth": {Value: &goas.SecurityScheme{Type: "http", Scheme: "bearer", BearerFormat: "JWT"}},
+			"apiKeyAuth": {Value: &goas.SecurityScheme{Type: "apiKey", In: "header", Name: "X-API-Key"}},
 		},
-		Security: openapi3.SecurityRequirements{bearer, apiKey},
+		Security: goas.SecurityRequirements{bearer, apiKey},
 	}
 }
 

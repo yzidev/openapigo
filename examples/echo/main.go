@@ -3,9 +3,9 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	echolib "github.com/labstack/echo/v4"
 	"github.com/yzidev/goas/adapters/echoadapter"
 
@@ -109,7 +109,7 @@ func main() {
 	echoadapter.Docs(base, goas.Config{
 		Title:   "User API",
 		Version: "1.0.0",
-		Tags:    openapi3.Tags{{Name: "Users", Description: "User management endpoints"}},
+		Tags:    goas.DocumentTags{{Name: "Users", Description: "User management endpoints"}},
 	})
-	_ = base.Start(":8080")
+	log.Fatal(base.Start(":8080"))
 }

@@ -3,10 +3,10 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	echolib "github.com/labstack/echo/v4"
 	"github.com/yzidev/goas/adapters/echoadapter"
 
@@ -20,17 +20,17 @@ type SecUser struct {
 
 func main() {
 	base := echolib.New()
-	bearer := openapi3.NewSecurityRequirement().Authenticate("bearerAuth")
-	apiKey := openapi3.NewSecurityRequirement().Authenticate("apiKeyAuth")
+	bearer := goas.NewSecurityRequirement().Authenticate("bearerAuth")
+	apiKey := goas.NewSecurityRequirement().Authenticate("apiKeyAuth")
 
 	cfg := goas.Config{
 		Title:   "User API (Echo + Security)",
 		Version: "1.0.0",
-		SecuritySchemes: map[string]*openapi3.SecuritySchemeRef{
-			"bearerAuth": {Value: &openapi3.SecurityScheme{Type: "http", Scheme: "bearer", BearerFormat: "JWT"}},
-			"apiKeyAuth": {Value: &openapi3.SecurityScheme{Type: "apiKey", In: "header", Name: "X-API-Key"}},
+		SecuritySchemes: map[string]*goas.SecuritySchemeRef{
+			"bearerAuth": {Value: &goas.SecurityScheme{Type: "http", Scheme: "bearer", BearerFormat: "JWT"}},
+			"apiKeyAuth": {Value: &goas.SecurityScheme{Type: "apiKey", In: "header", Name: "X-API-Key"}},
 		},
-		Security: openapi3.SecurityRequirements{bearer, apiKey},
+		Security: goas.SecurityRequirements{bearer, apiKey},
 	}
 
 	secure := base.Group("")
@@ -80,5 +80,5 @@ func main() {
 	})
 
 	echoadapter.Docs(base, cfg)
-	_ = base.Start(":8080")
+	log.Fatal(base.Start(":8080"))
 }

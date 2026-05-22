@@ -13,13 +13,13 @@ go get github.com/gin-gonic/gin@latest
 Run the example:
 
 ```bash
-go run ./examples/gin
+go run -tags "gin" ./examples/gin
 ```
 
-Use `-tags "security"` only when running the security variant:
+Use `-tags "gin,security"` when running the security variant:
 
 ```bash
-go run -tags "security" ./examples/gin
+go run -tags "gin,security" ./examples/gin
 ```
 
 Open Swagger UI:
@@ -91,14 +91,14 @@ r.POST("/users", createUser,
 Example:
 
 ```go
-bearer := &openapi3.SecurityScheme{Type: "http", Scheme: "bearer", BearerFormat: "JWT"}
-apiKey := &openapi3.SecurityScheme{Type: "apiKey", In: "header", Name: "X-API-Key"}
-cfg := goas.Config{Title: "API", Version: "1.0.0", SecuritySchemes: map[string]*openapi3.SecuritySchemeRef{
+bearer := &goas.SecurityScheme{Type: "http", Scheme: "bearer", BearerFormat: "JWT"}
+apiKey := &goas.SecurityScheme{Type: "apiKey", In: "header", Name: "X-API-Key"}
+cfg := goas.Config{Title: "API", Version: "1.0.0", SecuritySchemes: map[string]*goas.SecuritySchemeRef{
     "bearer": {Value: bearer},
     "xapikey": {Value: apiKey},
 }}
-bearerReq := openapi3.NewSecurityRequirement().Authenticate("bearer")
-cfg.Security = openapi3.SecurityRequirements{bearerReq}
+bearerReq := goas.NewSecurityRequirement().Authenticate("bearer")
+cfg.Security = goas.SecurityRequirements{bearerReq}
 ```
 
 9) Troubleshooting

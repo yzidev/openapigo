@@ -4,9 +4,9 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/yzidev/goas"
 	"github.com/yzidev/goas/adapters/muxadapter"
 )
@@ -179,7 +179,7 @@ func main() {
 	r := muxadapter.Mount(mux, goas.Config{
 		Title:   "User API",
 		Version: "1.0.0",
-		Tags: openapi3.Tags{
+		Tags: goas.DocumentTags{
 			{Name: "Users", Description: "User management endpoints"},
 		},
 	})
@@ -208,5 +208,5 @@ func main() {
 	api2.POST("/users", api2CreateUser, goas.Req(CreateUser{}), goas.Res(User{}), goas.Created())
 	api2.GET("/users/{id}", api2GetUser, goas.Res(User{}))
 
-	_ = http.ListenAndServe(":8080", mux)
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }
