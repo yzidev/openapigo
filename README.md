@@ -1,6 +1,6 @@
-# Openapigo 
+# Goas 
 
-[![CI](https://github.com/yzidev/openapigo/actions/workflows/ci.yml/badge.svg)](https://github.com/yzidev/openapigo/actions/workflows/ci.yml)
+[![CI](https://github.com/yzidev/goas/actions/workflows/ci.yml/badge.svg)](https://github.com/yzidev/goas/actions/workflows/ci.yml)
 
 Auto-generate **OpenAPI 3.x** from your Go route registrations.
 
@@ -14,7 +14,7 @@ Creating OpenAPI (OpenAPI 3.x) documentation for Go projects is often tedious an
 
 Every change to a handler, request/response type, or parameter often means manually editing the documentation files. This duplication increases the risk of inconsistencies, stale docs, and significant maintenance overhead. Compared to frameworks like Spring Boot or FastAPI — which offer more integrated or declarative approaches for keeping API docs close to code — the Go ecosystem has historically lacked a lightweight, ergonomic solution for automatic OpenAPI generation.
 
-OpenAPIGO was created to bridge that gap. Instead of writing a YAML entry for every endpoint, OpenAPIGO captures route registrations and a small, config-first specification to generate a complete OpenAPI document and Swagger UI automatically. The goals are:
+Goas was created to bridge that gap. Instead of writing a YAML entry for every endpoint, Goas captures route registrations and a small, config-first specification to generate a complete OpenAPI document and Swagger UI automatically. The goals are:
 
 - Eliminate the need to maintain huge, hand-written OpenAPI YAML files.
 - Keep handlers idiomatic and minimal while centralizing schema metadata in a compact config.
@@ -49,7 +49,7 @@ Note: the default router implementation used to be chi-backed; it now uses a sma
 ### 2) Config-first spec (SpringBoot-like)
 
 Go handlers don’t expose schema information automatically.
-So OpenAPIGO uses a **config-first** approach:
+So Goas uses a **config-first** approach:
 
 - put route schemas/tags/security/query/header params in one place using `openapi/spec`
 - keep your handlers clean and readable
@@ -63,7 +63,7 @@ Use `MultipartUpload(...)` to get `multipart/form-data` request bodies and a fil
 ## Installation
 
 ```bash
-go get github.com/yzidev/openapigo@latest
+go get github.com/yzidev/goas@latest
 ```
 
 ---
@@ -76,7 +76,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/yzidev/openapigo/openapi"
+	"github.com/yzidev/goas/openapi"
 )
 
 type User struct {
@@ -115,7 +115,7 @@ base.Docs()
 ## Springdoc-like mode
 
 For Gin, Echo, and Fiber, you can register routes with the framework directly and
-add OpenAPIGO with one docs call. OpenAPIGO discovers method/path information from
+add Goas with one docs call. Goas discovers method/path information from
 the framework router and mounts Swagger UI.
 
 ```go
@@ -162,7 +162,7 @@ _ = http.ListenAndServe(":8080", mux)
 ```
 
 Note: the standard `http.ServeMux` does not expose registered route metadata, so
-OpenAPIGO can auto-document routes registered through `openapi.Router` or
+Goas can auto-document routes registered through `openapi.Router` or
 `muxadapter.Router`, but not arbitrary handlers registered directly on
 `http.ServeMux`.
 
@@ -240,7 +240,7 @@ Run examples and open Swagger UI:
 
 ## Current support (today)
 
-OpenAPIGO is currently focused on **4 frameworks/router setups**:
+Goas is currently focused on **4 frameworks/router setups**:
 
 1. **net/http (built-in `openapi.Router` based on chi)**
 2. **Gin**
@@ -252,7 +252,7 @@ Notes:
 - Adapters are provided as packages under `adapters/*` so you can use them when needed.
   They are compiled by default and no special build tags are required to use them.
   If you prefer to keep adapter dependencies optional for your project, consider
-  shipping adapters as separate modules (e.g. `github.com/yzidev/openapigo-adapter-gin`) so downstream projects opt-in.
+  shipping adapters as separate modules (e.g. `github.com/yzidev/goas-adapter-gin`) so downstream projects opt-in.
 
 ---
 
@@ -278,7 +278,7 @@ The direction going forward:
 - **Adapter expansion (optional)**:
   - If more frameworks are added, they will follow the same pattern:
     - keep handlers/framework usage idiomatic
-    - keep OpenAPIGO integration minimal
+    - keep Goas integration minimal
     - keep core library independent of adapter dependencies
 
 ### Update policy / compatibility
@@ -289,7 +289,7 @@ The direction going forward:
 
 ### Framework support timeline
 
-For now OpenAPIGO only ships examples + adapters for:
+For now Goas only ships examples + adapters for:
 - `net/http` (built-in router)
 - Gin
 - Echo
@@ -317,7 +317,7 @@ For a starting point, check:
 
 ## Adapters (how to use with frameworks)
 
-OpenAPIGO provides lightweight adapters for multiple frameworks so you can keep your
+Goas provides lightweight adapters for multiple frameworks so you can keep your
 handler code clean while still generating OpenAPI and mounting Swagger UI.
 
 Pattern (recommended):
@@ -334,8 +334,8 @@ Examples:
 ```go
 import (
     ginlib "github.com/gin-gonic/gin"
-    "github.com/yzidev/openapigo/openapi"
-    "github.com/yzidev/openapigo/adapters/ginadapter"
+    "github.com/yzidev/goas/openapi"
+    "github.com/yzidev/goas/adapters/ginadapter"
 )
 
 engine := ginlib.New()
@@ -349,8 +349,8 @@ engine.Run(":8080")
 ```go
 import (
     echolib "github.com/labstack/echo/v4"
-    "github.com/yzidev/openapigo/openapi"
-    "github.com/yzidev/openapigo/adapters/echoadapter"
+    "github.com/yzidev/goas/openapi"
+    "github.com/yzidev/goas/adapters/echoadapter"
 )
 
 base := echolib.New()
@@ -364,8 +364,8 @@ base.Start(":8080")
 ```go
 import (
     fiberlib "github.com/gofiber/fiber/v2"
-    "github.com/yzidev/openapigo/openapi"
-    "github.com/yzidev/openapigo/adapters/fiberadapter"
+    "github.com/yzidev/goas/openapi"
+    "github.com/yzidev/goas/adapters/fiberadapter"
 )
 
 app := fiberlib.New()

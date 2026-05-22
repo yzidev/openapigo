@@ -1,6 +1,6 @@
-# Gin example (OpenAPIGO)
+# Gin example (Goas)
 
-This example uses native Gin routes plus one OpenAPIGO docs call, similar to a Springdoc-style setup.
+This example uses native Gin routes plus one Goas docs call, similar to a Springdoc-style setup.
 
 ## Quick start
 
@@ -34,15 +34,15 @@ OpenAPI JSON:
 
 ## Implementation details (step-by-step)
 
-This section shows how to wire Gin with OpenAPIGO in your own project.
+This section shows how to wire Gin with Goas in your own project.
 
 1) Imports
 
 ```go
 import (
     ginlib "github.com/gin-gonic/gin"
-    ginadapter "github.com/yzidev/openapigo/adapters/ginadapter"
-    "github.com/yzidev/openapigo/openapi"
+    ginadapter "github.com/yzidev/goas/adapters/ginadapter"
+    "github.com/yzidev/goas/openapi"
 )
 ```
 
@@ -117,4 +117,4 @@ cfg.Security = openapi3.SecurityRequirements{bearerReq}
 
 ### Note about core router
 
-The OpenAPIGO core router is a lightweight net/http-backed mux. The Gin adapter continues to work unchanged. For the net/http example you can mount the router on a ServeMux easily with `muxadapter.Mount(mux, cfg)`.
+The Goas core router is a lightweight net/http-backed mux. The Gin adapter continues to work unchanged. For the net/http example you can mount the router on a ServeMux easily with `muxadapter.Mount(mux, cfg)`.

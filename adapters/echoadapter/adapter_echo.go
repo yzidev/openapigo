@@ -7,8 +7,8 @@ import (
 	echolib "github.com/labstack/echo/v4"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/yzidev/openapigo/openapi"
-	"github.com/yzidev/openapigo/openapi/ui"
+	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas/openapi/ui"
 )
 
 type Router struct {
@@ -29,7 +29,7 @@ func NewEchoAdapters(e *echolib.Echo) *Router {
 	return Wrap(e)
 }
 
-// Wrap converts an existing Echo instance into an OpenAPIGO router adapter.
+// Wrap converts an existing Echo instance into an Goas router adapter.
 func Wrap(e *echolib.Echo) *Router {
 	if e == nil {
 		e = echolib.New()
@@ -101,7 +101,7 @@ func (r *Router) Docs(cfg openapi.Config) {
 
 // Docs mounts OpenAPI JSON and Swagger UI for a native Echo instance.
 // It discovers routes registered directly on Echo, so you can use plain Echo
-// routing and add OpenAPIGO with a single call.
+// routing and add Goas with a single call.
 func Docs(e *echolib.Echo, cfg openapi.Config) {
 	Wrap(e).Docs(cfg)
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	ginlib "github.com/gin-gonic/gin"
 
-	"github.com/yzidev/openapigo/openapi"
+	"github.com/yzidev/goas/openapi"
 )
 
 // registerRoutes wires the endpoints in a readable and grouped way.

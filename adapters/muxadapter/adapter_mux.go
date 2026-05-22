@@ -3,7 +3,7 @@ package muxadapter
 import (
 	"net/http"
 
-	"github.com/yzidev/openapigo/openapi"
+	"github.com/yzidev/goas/openapi"
 )
 
 // Router is the default net/http router implementation.
@@ -19,7 +19,7 @@ func NewHttpAdapters(mux ...*http.ServeMux) *Router {
 	return New(mux...)
 }
 
-// New creates the default net/http OpenAPIGO router adapter.
+// New creates the default net/http Goas router adapter.
 func New(mux ...*http.ServeMux) *Router {
 	r := openapi.NewRouter()
 	if len(mux) > 0 && mux[0] != nil {
@@ -28,7 +28,7 @@ func New(mux ...*http.ServeMux) *Router {
 	return r
 }
 
-// Docs mounts OpenAPI JSON and Swagger UI for a net/http OpenAPIGO router.
+// Docs mounts OpenAPI JSON and Swagger UI for a net/http Goas router.
 func Docs(r *Router, cfg openapi.Config) {
 	if r == nil {
 		return
@@ -41,7 +41,7 @@ func AutoDocs(r *Router, cfg openapi.Config) {
 	Docs(r, cfg)
 }
 
-// Mount creates an OpenAPIGO router, mounts it on mux, and registers docs.
+// Mount creates an Goas router, mounts it on mux, and registers docs.
 // Use this for a Springdoc-like setup with net/http:
 //
 //	r := muxadapter.Mount(mux, openapi.Config{Title: "API", Version: "1.0.0"})

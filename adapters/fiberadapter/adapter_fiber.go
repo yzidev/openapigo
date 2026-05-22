@@ -7,8 +7,8 @@ import (
 	fiberlib "github.com/gofiber/fiber/v2"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/yzidev/openapigo/openapi"
-	"github.com/yzidev/openapigo/openapi/ui"
+	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas/openapi/ui"
 )
 
 type Router struct {
@@ -29,7 +29,7 @@ func NewFiberAdapters(app *fiberlib.App) *Router {
 	return Wrap(app)
 }
 
-// Wrap converts an existing Fiber app into an OpenAPIGO router adapter.
+// Wrap converts an existing Fiber app into an Goas router adapter.
 func Wrap(app *fiberlib.App) *Router {
 	if app == nil {
 		app = fiberlib.New()
@@ -101,7 +101,7 @@ func (r *Router) Docs(cfg openapi.Config) {
 
 // Docs mounts OpenAPI JSON and Swagger UI for a native Fiber app.
 // It discovers routes registered directly on Fiber, so you can use plain Fiber
-// routing and add OpenAPIGO with a single call.
+// routing and add Goas with a single call.
 func Docs(app *fiberlib.App, cfg openapi.Config) {
 	Wrap(app).Docs(cfg)
 }

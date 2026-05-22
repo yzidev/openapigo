@@ -1,6 +1,6 @@
-# Echo example (OpenAPIGO)
+# Echo example (Goas)
 
-This example uses native Echo routes plus one OpenAPIGO docs call.
+This example uses native Echo routes plus one Goas docs call.
 
 ## Quick start
 
@@ -39,8 +39,8 @@ OpenAPI JSON:
 ```go
 import (
     echolib "github.com/labstack/echo/v4"
-    echoadapter "github.com/yzidev/openapigo/adapters/echoadapter"
-    "github.com/yzidev/openapigo/openapi"
+    echoadapter "github.com/yzidev/goas/adapters/echoadapter"
+    "github.com/yzidev/goas/openapi"
 )
 ```
 
@@ -76,4 +76,4 @@ base.Start(":8080")
 
 ### Note about core router
 
-The OpenAPIGO core router is a lightweight net/http-backed mux. Adapter packages (including Echo) integrate with this core behavior and continue to work as before. If you use the `httprouter` adapter you can optionally mount the router automatically onto a `*http.ServeMux` by calling `muxadapter.Mount(mux, cfg)`.
+The Goas core router is a lightweight net/http-backed mux. Adapter packages (including Echo) integrate with this core behavior and continue to work as before. If you use the `httprouter` adapter you can optionally mount the router automatically onto a `*http.ServeMux` by calling `muxadapter.Mount(mux, cfg)`.

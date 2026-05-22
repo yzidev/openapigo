@@ -1,4 +1,4 @@
-module github.com/yzidev/openapigo
+module github.com/yzidev/goas
 
 go 1.25.5
 

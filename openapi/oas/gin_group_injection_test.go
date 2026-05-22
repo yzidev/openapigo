@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	ginlib "github.com/gin-gonic/gin"
-	"github.com/yzidev/openapigo/adapters/ginadapter"
-	"github.com/yzidev/openapigo/openapi"
+	"github.com/yzidev/goas/adapters/ginadapter"
+	"github.com/yzidev/goas/openapi"
 )
 
 type testReq struct {

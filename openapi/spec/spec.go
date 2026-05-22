@@ -5,11 +5,11 @@
 package spec
 
 import (
-	"github.com/yzidev/openapigo/adapters/echoadapter"
-	"github.com/yzidev/openapigo/adapters/fiberadapter"
-	"github.com/yzidev/openapigo/adapters/ginadapter"
-	"github.com/yzidev/openapigo/openapi"
-	"github.com/yzidev/openapigo/openapi/oas"
+	"github.com/yzidev/goas/adapters/echoadapter"
+	"github.com/yzidev/goas/adapters/fiberadapter"
+	"github.com/yzidev/goas/adapters/ginadapter"
+	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas/openapi/oas"
 )
 
 type (

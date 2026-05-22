@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	ginlib "github.com/gin-gonic/gin"
-	"github.com/yzidev/openapigo/openapi"
+	"github.com/yzidev/goas/openapi"
 )
 
 func requireBearer(c *ginlib.Context) bool {

@@ -1,6 +1,6 @@
-# Fiber example (OpenAPIGO)
+# Fiber example (Goas)
 
-Fiber example uses native Fiber routes plus one OpenAPIGO docs call.
+Fiber example uses native Fiber routes plus one Goas docs call.
 
 ## Quick start
 
@@ -39,8 +39,8 @@ OpenAPI JSON:
 ```go
 import (
     fiberlib "github.com/gofiber/fiber/v2"
-    fiberadapter "github.com/yzidev/openapigo/adapters/fiberadapter"
-    "github.com/yzidev/openapigo/openapi"
+    fiberadapter "github.com/yzidev/goas/adapters/fiberadapter"
+    "github.com/yzidev/goas/openapi"
 )
 ```
 
@@ -76,4 +76,4 @@ app.Listen(":8080")
 
 ### Note about core router
 
-The OpenAPIGO core router is a lightweight net/http-backed mux. Adapter packages (including Fiber) integrate with the core behavior and continue to work as before. If you use the `httprouter` adapter you can optionally mount the router automatically onto a `*http.ServeMux` by calling `muxadapter.Mount(mux, cfg)`.
+The Goas core router is a lightweight net/http-backed mux. Adapter packages (including Fiber) integrate with the core behavior and continue to work as before. If you use the `httprouter` adapter you can optionally mount the router automatically onto a `*http.ServeMux` by calling `muxadapter.Mount(mux, cfg)`.

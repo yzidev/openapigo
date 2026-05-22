@@ -8,8 +8,8 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	fiberlib "github.com/gofiber/fiber/v2"
 
-	"github.com/yzidev/openapigo/adapters/fiberadapter"
-	"github.com/yzidev/openapigo/openapi"
+	"github.com/yzidev/goas/adapters/fiberadapter"
+	"github.com/yzidev/goas/openapi"
 )
 
 type User struct {

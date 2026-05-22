@@ -8,8 +8,8 @@ import (
 	ginlib "github.com/gin-gonic/gin"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/yzidev/openapigo/openapi"
-	"github.com/yzidev/openapigo/openapi/ui"
+	"github.com/yzidev/goas/openapi"
+	"github.com/yzidev/goas/openapi/ui"
 )
 
 // Router wraps gin.Engine and captures route metadata for OpenAPI generation.
@@ -35,7 +35,7 @@ func NewGinAdapters(engine *ginlib.Engine) *Router {
 	return Wrap(engine)
 }
 
-// Wrap converts an existing Gin engine into an OpenAPIGO router adapter.
+// Wrap converts an existing Gin engine into an Goas router adapter.
 func Wrap(engine *ginlib.Engine) *Router {
 	if engine == nil {
 		engine = ginlib.New()
@@ -176,7 +176,7 @@ func (r *Router) Docs(cfg openapi.Config) {
 
 // Docs mounts OpenAPI JSON and Swagger UI for a native Gin engine.
 // It discovers routes registered directly on the engine, so you can use plain
-// Gin routing and add OpenAPIGO with a single call.
+// Gin routing and add Goas with a single call.
 func Docs(engine *ginlib.Engine, cfg openapi.Config) {
 	Wrap(engine).Docs(cfg)
 }

@@ -4,7 +4,7 @@ package main
 
 import (
 	ginlib "github.com/gin-gonic/gin"
-	"github.com/yzidev/openapigo/adapters/ginadapter"
+	"github.com/yzidev/goas/adapters/ginadapter"
 )
 
 type SecUser struct {

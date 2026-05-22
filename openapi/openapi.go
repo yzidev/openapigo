@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/yzidev/openapigo/openapi/ui"
+	"github.com/yzidev/goas/openapi/ui"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )

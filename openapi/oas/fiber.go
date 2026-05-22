@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	fiberlib "github.com/gofiber/fiber/v2"
-	"github.com/yzidev/openapigo/adapters/fiberadapter"
-	"github.com/yzidev/openapigo/openapi"
+	"github.com/yzidev/goas/adapters/fiberadapter"
+	"github.com/yzidev/goas/openapi"
 )
 
 // FiberRouter wraps the fiber adapter Router and injects options from Spec automatically.

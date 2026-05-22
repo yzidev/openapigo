@@ -8,9 +8,9 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	echolib "github.com/labstack/echo/v4"
-	"github.com/yzidev/openapigo/adapters/echoadapter"
+	"github.com/yzidev/goas/adapters/echoadapter"
 
-	"github.com/yzidev/openapigo/openapi"
+	"github.com/yzidev/goas/openapi"
 )
 
 type SecUser struct {

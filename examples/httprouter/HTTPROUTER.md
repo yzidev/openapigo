@@ -1,4 +1,4 @@
-# net/http (default) router example (OpenAPIGO)
+# net/http (default) router example (Goas)
 
 The "default" router in this repo is `openapi.Router` (a lightweight net/http-based mux).
 
@@ -26,7 +26,7 @@ OpenAPI JSON:
 
 ## Implementation details (step-by-step)
 
-This section shows how to wire the default HTTP router with OpenAPIGO in your project.
+This section shows how to wire the default HTTP router with Goas in your project.
 
 1) Imports
 
@@ -34,8 +34,8 @@ This section shows how to wire the default HTTP router with OpenAPIGO in your pr
 import (
     "net/http"
 
-    "github.com/yzidev/openapigo/adapters/muxadapter"
-    "github.com/yzidev/openapigo/openapi"
+    "github.com/yzidev/goas/adapters/muxadapter"
+    "github.com/yzidev/goas/openapi"
 )
 ```
 

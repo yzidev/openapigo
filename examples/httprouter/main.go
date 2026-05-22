@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/yzidev/openapigo/adapters/muxadapter"
-	"github.com/yzidev/openapigo/openapi"
+	"github.com/yzidev/goas/adapters/muxadapter"
+	"github.com/yzidev/goas/openapi"
 )
 
 type User struct {

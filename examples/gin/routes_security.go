@@ -6,7 +6,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	ginlib "github.com/gin-gonic/gin"
 
-	"github.com/yzidev/openapigo/openapi"
+	"github.com/yzidev/goas/openapi"
 )
 
 func openAPICfgSecurity() openapi.Config {
@@ -16,7 +16,7 @@ func openAPICfgSecurity() openapi.Config {
 	return openapi.Config{
 		Title:       "User API (Gin + Security)",
 		Version:     "1.0.0",
-		Description: "An examples API with secured endpoints using Gin and OpenAPIGO",
+		Description: "An examples API with secured endpoints using Gin and Goas",
 		Tags: openapi3.Tags{
 			{Name: "Secure Users", Description: "Secured endpoints (Bearer / X-API-Key)"},
 		},
